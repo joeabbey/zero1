@@ -99,7 +99,7 @@ pub fn cmd_verify(file: PathBuf, keys_file: Option<PathBuf>) -> Result<()> {
     // Verify Merkle chain structure
     verify_chain(&chain).context("Merkle chain verification failed")?;
 
-    println!("{} {}", "✓".green().bold(), "Merkle chain structure valid");
+    println!("{} Merkle chain structure valid", "✓".green().bold());
 
     // If public keys provided, verify signatures
     if let Some(keys_path) = keys_file {
@@ -111,9 +111,9 @@ pub fn cmd_verify(file: PathBuf, keys_file: Option<PathBuf>) -> Result<()> {
         let mut public_keys = HashMap::new();
         for (signer_id, hex_key) in keys_map {
             let key_bytes = hex::decode(&hex_key)
-                .with_context(|| format!("invalid hex key for {}", signer_id))?;
+                .with_context(|| format!("invalid hex key for {signer_id}"))?;
             if key_bytes.len() != 32 {
-                anyhow::bail!("public key for {} must be 32 bytes", signer_id);
+                anyhow::bail!("public key for {signer_id} must be 32 bytes");
             }
             let mut key_array = [0u8; 32];
             key_array.copy_from_slice(&key_bytes);

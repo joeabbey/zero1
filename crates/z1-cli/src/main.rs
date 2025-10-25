@@ -169,10 +169,10 @@ fn handle_test(args: TestArgs) -> Result<()> {
     let mut all_failures = Vec::new();
 
     for path in &args.paths {
-        println!("Running tests from: {}", path);
+        println!("Running tests from: {path}");
         let source = fs::read_to_string(path)?;
         let file = z1_test::parse_test_file(&source)
-            .map_err(|e| anyhow::anyhow!("Failed to parse {}: {}", path, e))?;
+            .map_err(|e| anyhow::anyhow!("Failed to parse {path}: {e}"))?;
 
         let results = runner.run_file(&file);
 
@@ -190,9 +190,9 @@ fn handle_test(args: TestArgs) -> Result<()> {
     }
 
     println!("\nTest Results:");
-    println!("  Passed:  {}", total_passed);
-    println!("  Failed:  {}", total_failed);
-    println!("  Skipped: {}", total_skipped);
+    println!("  Passed:  {total_passed}");
+    println!("  Failed:  {total_failed}");
+    println!("  Skipped: {total_skipped}");
 
     if !all_failures.is_empty() {
         println!("\nFailures:");

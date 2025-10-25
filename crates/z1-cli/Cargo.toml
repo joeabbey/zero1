@@ -28,7 +28,7 @@ z1-codegen-wasm = { path = "../z1-codegen-wasm" }
 z1-test = { path = "../z1-test" }
 colored.workspace = true
 hex.workspace = true
+chrono.workspace = true
 
 [dev-dependencies]
 tempfile = "3.8"
-chrono.workspace = true
