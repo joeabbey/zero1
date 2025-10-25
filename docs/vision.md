@@ -201,7 +201,7 @@ Z1 records “how this code came to be” in `prov/` as append‑only logs, plus
 ```z1r
 //@z1: model="llm-x-2025-08", agent="z1-agent/1.2.3", ctx_in=2_340
 //:prompt: "Refactor handler into pure function; no net effect."
-//:inputs: ["cells/http.server.z1r@sha256:..."]
+//:inputs: ["cells/http.server.z1r@sha3-256:..."]
 ```
 
 These lines are ignored by the parser but preserved by the formatter and included in hash calculations **only if** `prov.inline=true` in `manifest.z1m`.
@@ -210,13 +210,13 @@ These lines are ignored by the parser but preserved by the formatter and include
 
 ```yaml
 entry_id: cell:http.server@v3
-prev: sha256:3f7...ab2
+prev: sha3-256:3f7...ab2
 actor: agent:z1-agent/1.2.3
 model: llm-x-2025-08
-prompt_sha256: 5fd...c91
+prompt_sha3: 5fd...c91
 prompt_excerpt: "Refactor handler into pure function..."
 tools: ["rename-symbols", "effect-infer", "z1fmt --compact"]
-diff_sha256: a12...ee0
+diff_sha3: a12...ee0
 timestamp: 2025-10-25T16:03:10Z
 signatures:
   - by: dev:alice@keys/ed25519
@@ -276,7 +276,7 @@ inline = true
 required_signers = ["dev:*", "agent:z1-agent/*"]
 
 [security]
-merkle_root = "sha256:8fe...c3a"
+merkle_root = "sha3-256:8fe...c3a"
 ```
 
 ### 10.2 Symbol map header (inside cells)
@@ -495,4 +495,3 @@ Zero1 gives you:
 * A pragmatic toolchain to format, verify, test, and compile to real targets.
 
 If you’d like, I can generate a tiny reference implementation plan (parser + AST + formatter + type/effect checker outline) and a few sample `z1fmt` transformations to make this immediately buildable.
-

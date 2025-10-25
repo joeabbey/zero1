@@ -188,28 +188,28 @@ pub struct Span { pub start: u32, pub end: u32 }
 * Encode numeric types in canonical width; strings as UTF‑8.
 * Children ordered structurally (as declared).
 
-**Node hash:** `H(node) = SHA256(tag || enc(node_fields) || concat(H(children)))`
+**Node hash:** `H(node) = SHA3-256(tag || enc(node_fields) || concat(H(children)))`
 **Cell hash:** hash of Module node.
 **Pack Merkle root:** Merkle over sorted list of `{path, cell_semhash}`, plus dicts/prov manifests.
 
 `crates/z1-hash/src/lib.rs` (excerpt)
 
 ```rust
-use sha2::{Digest, Sha256};
+use sha3::{Digest, Sha3_256};
 use z1_ast::*;
 
 pub fn sem_hash_module(m: &Module) -> [u8; 32] {
     let normalized = normalize_module_semantics(m);
-    sha256_node(&normalized)
+    sha3_node(&normalized)
 }
 
 // Pseudocode-ish: turn the normalized module into a canonical byte buffer
-fn sha256_node(node: &NormNode) -> [u8; 32] {
-    let mut hasher = Sha256::new();
+fn sha3_node(node: &NormNode) -> [u8; 32] {
+    let mut hasher = Sha3_256::new();
     hasher.update(node.tag());
     hasher.update(node.canonical_bytes()); // sorted keys, long idents, no SymbolMap
     for child in node.children() {
-        hasher.update(sha256_node(child));
+        hasher.update(sha3_node(child));
     }
     hasher.finalize().into()
 }
@@ -368,14 +368,14 @@ Algorithm:
 ```json
 {
   "entry_id":"cell:http.server@3",
-  "prev":"sha256:3f7...ab2",
+  "prev":"sha3-256:3f7...ab2",
   "actor":"agent:z1-agent/1.2.3",
   "model":"llm-x-2025-08",
-  "prompt_sha256":"5fd...c91",
+  "prompt_sha3":"5fd...c91",
   "prompt_excerpt":"Refactor handler into pure function...",
-  "inputs":["cells/http.server.z1c@sha256:..."],
-  "cell_semhash":"sha256:a12...ee0",
-  "cell_formhash":"sha256:bb1...992",
+  "inputs":["cells/http.server.z1c@sha3-256:..."],
+  "cell_semhash":"sha3-256:a12...ee0",
+  "cell_formhash":"sha3-256:bb1...992",
   "timestamp":"2025-10-25T16:03:10Z",
   "signatures":[
     {"by":"dev:alice@keys/ed25519","sig":"ed25519:ab8...2f1"},
@@ -391,7 +391,7 @@ Rust verification skeleton:
 ```rust
 pub fn verify_entry(e: &ProvEntry, key: &PublicKey) -> bool {
     let canon = canonical_json_without_sigs(e); // sorted keys, no signatures
-    ed25519_verify(key, &sha256(&canon), &e.signatures[..])
+    ed25519_verify(key, &sha3_256(&canon), &e.signatures[..])
 }
 ```
 
@@ -601,4 +601,3 @@ The `prompt-test` runner stubs a model adapter interface; in CI you can simulate
 ---
 
 If you want, I can generate **concrete code files** for the lexer, a minimal parser covering the example grammar, and a working `z1fmt` in Rust so you can paste them straight into `crates/`.
-
