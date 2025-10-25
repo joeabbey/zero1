@@ -16,8 +16,8 @@ Zero1 (Z1) is a Rust-based toolchain plus language optimized for LLM agent workf
 ### M0 – Core Bootstrapping (Week 0‑1)
 - [x] Scaffold Cargo workspace per `docs/design.md` (create `crates/z1-*`, shared `Cargo.toml`).
 - [x] Implement lexer/token enums with dual keyword support; add snapshot tests covering compact vs relaxed samples.
-- [ ] Build parser + AST (include `SymbolMap`); block semantic fields per design. _(🚧 header + imports parsed; SymbolMap + decls pending)_
-- [ ] Implement canonical SemHash/FormHash functions and golden tests.
+- [x] Build parser + AST (include `SymbolMap`); block semantic fields per design. _(Symbol maps, type/fn placeholders, and block capture now parsed; stmt-level AST still TODO.)_
+- [x] Implement canonical SemHash/FormHash functions and golden tests. _(Hash crate + CLI `hash` subcommand live; expand coverage as AST grows.)_
 - [ ] Ship `z1fmt` MVP supporting compact↔relaxed round-trip on sample cells.
 
 ### M1 – Semantics & Context (Week 1‑2)
@@ -53,5 +53,6 @@ Zero1 (Z1) is a Rust-based toolchain plus language optimized for LLM agent workf
 1. ✅ Confirm AGENTS guide (done).
 2. ✅ Initialize Cargo workspace + minimal crates.
 3. ✅ Draft lexer/parser scaffolding with fixture cells to unblock downstream agents.
-4. [ ] Extend AST + parser with SymbolMap, type/fn decl placeholders, and richer tests.
-5. [ ] Sketch SemHash/FormHash crate API (`z1-hash`) and wire into CLI for smoke tests.
+4. ✅ Extend AST + parser with SymbolMap, type/fn decl placeholders, and richer tests.
+5. ✅ Sketch SemHash/FormHash crate API (`z1-hash`) and wire into CLI for smoke tests.
+6. [ ] Lay down `z1-fmt` plan (CLI flags, formatting strategy, test fixtures) to prep for round-trip support.

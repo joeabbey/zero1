@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use std::fs;
 use tracing::info;
 
 /// Zero1 CLI entry point. Commands are stubs until the corresponding crates land.
@@ -22,6 +23,11 @@ enum Commands {
     },
     /// Display toolchain and provenance information.
     Info,
+    /// Compute semantic + format hashes for a `.z1c`/`.z1r` cell.
+    Hash {
+        /// Path to the source cell.
+        path: String,
+    },
 }
 
 fn main() -> Result<()> {
@@ -33,6 +39,7 @@ fn main() -> Result<()> {
             info!("Zero1 CLI scaffolding is ready for agent contributions.");
             Ok(())
         }
+        Commands::Hash { path } => handle_hash(path),
     }
 }
 
@@ -47,5 +54,14 @@ fn handle_fmt(path: String, check: bool) -> Result<()> {
         // In a future milestone this will dispatch into the formatter crate.
         info!("no formatting performed (stub)");
     }
+    Ok(())
+}
+
+fn handle_hash(path: String) -> Result<()> {
+    let source = fs::read_to_string(&path)?;
+    let module = z1_parse::parse_module(&source)?;
+    let hashes = z1_hash::module_hashes(&module);
+    println!("semhash: {}", hashes.semantic);
+    println!("formhash: {}", hashes.format);
     Ok(())
 }

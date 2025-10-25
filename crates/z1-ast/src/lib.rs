@@ -45,6 +45,7 @@ pub struct Module {
 }
 
 impl Module {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         path: ModulePath,
         version: Option<String>,
@@ -67,6 +68,9 @@ impl Module {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Item {
     Import(Import),
+    Symbol(SymbolMap),
+    Type(TypeDecl),
+    Fn(FnDecl),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -74,5 +78,62 @@ pub struct Import {
     pub path: String,
     pub alias: Option<Ident>,
     pub only: Vec<Ident>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub struct SymbolMap {
+    pub pairs: Vec<SymbolPair>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SymbolPair {
+    pub long: Ident,
+    pub short: Ident,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct TypeDecl {
+    pub name: Ident,
+    pub expr: TypeExpr,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum TypeExpr {
+    Path(Vec<Ident>),
+    Record(Vec<RecordField>),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RecordField {
+    pub name: Ident,
+    pub ty: Box<TypeExpr>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FnDecl {
+    pub name: Ident,
+    pub params: Vec<Param>,
+    pub ret: TypeExpr,
+    pub effects: Vec<Ident>,
+    pub body: Block,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Param {
+    pub name: Ident,
+    pub ty: TypeExpr,
+    pub span: Span,
+}
+
+/// Placeholder for statements until the full AST exists.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub struct Block {
+    pub raw: String,
     pub span: Span,
 }

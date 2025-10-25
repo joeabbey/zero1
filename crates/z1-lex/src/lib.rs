@@ -16,6 +16,9 @@ pub enum TokenKind {
     KwOnly,
     KwCtx,
     KwCaps,
+    KwType,
+    KwFn,
+    KwEff,
     Ident,
     Number,
     String,
@@ -31,6 +34,7 @@ pub enum TokenKind {
     Semi,
     Eq,
     Arrow,
+    Sym,
     Hash,
     Unknown,
     Eof,
@@ -62,6 +66,17 @@ enum RawToken {
 
     #[token("caps")]
     KwCaps,
+
+    #[token("type")]
+    #[token("t")]
+    KwType,
+
+    #[token("fn")]
+    #[token("f")]
+    KwFn,
+
+    #[token("eff")]
+    KwEff,
 
     #[regex(r"[A-Za-z_][A-Za-z0-9_\.]*")]
     Ident,
@@ -96,6 +111,8 @@ enum RawToken {
     Eq,
     #[token("->")]
     Arrow,
+    #[token("#sym")]
+    Sym,
     #[token("#")]
     Hash,
 }
@@ -109,6 +126,9 @@ impl From<RawToken> for TokenKind {
             RawToken::KwOnly => TokenKind::KwOnly,
             RawToken::KwCtx => TokenKind::KwCtx,
             RawToken::KwCaps => TokenKind::KwCaps,
+            RawToken::KwType => TokenKind::KwType,
+            RawToken::KwFn => TokenKind::KwFn,
+            RawToken::KwEff => TokenKind::KwEff,
             RawToken::Ident => TokenKind::Ident,
             RawToken::Number => TokenKind::Number,
             RawToken::String => TokenKind::String,
@@ -124,6 +144,7 @@ impl From<RawToken> for TokenKind {
             RawToken::Semi => TokenKind::Semi,
             RawToken::Eq => TokenKind::Eq,
             RawToken::Arrow => TokenKind::Arrow,
+            RawToken::Sym => TokenKind::Sym,
             RawToken::Hash => TokenKind::Hash,
             RawToken::Error => TokenKind::Unknown,
         }
