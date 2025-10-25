@@ -376,6 +376,7 @@ impl Parser {
 
         Ok(Block {
             raw: content.trim().to_string(),
+            statements: Vec::new(),
             span: Span::new(start.start, end.end),
         })
     }

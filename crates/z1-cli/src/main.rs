@@ -36,6 +36,9 @@ enum Commands {
     /// Run Z1 test files (.z1t).
     #[command(alias = "z1test")]
     Test(TestArgs),
+    /// Run the benchmark harness.
+    #[command(alias = "z1bench")]
+    Bench(commands::bench::BenchArgs),
 }
 
 #[derive(Debug, Args)]
@@ -133,6 +136,7 @@ fn main() -> Result<()> {
         Commands::Ctx(args) => handle_ctx(args),
         Commands::Prov(cmd) => handle_prov(cmd),
         Commands::Test(args) => handle_test(args),
+        Commands::Bench(args) => commands::bench::run(args),
     }
 }
 

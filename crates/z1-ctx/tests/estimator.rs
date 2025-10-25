@@ -197,7 +197,7 @@ f hello()->Unit eff [pure] { ret Unit }
     let module = parse_module(source).unwrap();
     let estimate = estimate_cell(&module).unwrap();
 
-    let display = format!("{}", estimate);
+    let display = format!("{estimate}");
     assert!(display.contains("Cell Estimate"));
     assert!(display.contains("Total tokens"));
     assert!(display.contains("Budget"));

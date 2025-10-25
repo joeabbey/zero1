@@ -382,7 +382,7 @@ mod tests {
             name: name.to_string(),
             params: (0..params)
                 .map(|i| Param {
-                    name: format!("p{}", i),
+                    name: format!("p{i}"),
                     ty: TypeExpr::Path(vec!["U32".to_string()]),
                     span: Span::new(0, 1),
                 })
@@ -391,6 +391,7 @@ mod tests {
             effects: effects.into_iter().map(String::from).collect(),
             body: Block {
                 raw: body.to_string(),
+                statements: Vec::new(),
                 span: Span::new(0, body.len() as u32),
             },
             span: Span::new(0, 10),
@@ -433,13 +434,13 @@ mod tests {
         // Each type adds about 3-4 nodes (type decl + name + type expr)
         let mut items = Vec::new();
         for i in 0..120 {
-            items.push(Item::Type(make_type(&format!("Type{}", i))));
+            items.push(Item::Type(make_type(&format!("Type{i}"))));
         }
         let module = make_module(vec![], None, items);
 
         // Verify we actually exceed the limit
         let actual = PolicyChecker::count_ast_nodes(&module);
-        assert!(actual > 200, "Module has {} nodes, expected > 200", actual);
+        assert!(actual > 200, "Module has {actual} nodes, expected > 200");
 
         let checker = PolicyChecker::with_defaults();
         let result = checker.check_module(&module);
@@ -497,7 +498,7 @@ mod tests {
     #[test]
     fn test_module_with_10_imports_passes() {
         let items = (0..10)
-            .map(|i| Item::Import(make_import(&format!("lib{}", i))))
+            .map(|i| Item::Import(make_import(&format!("lib{i}"))))
             .collect();
         let module = make_module(vec![], None, items);
         let checker = PolicyChecker::with_defaults();
@@ -507,7 +508,7 @@ mod tests {
     #[test]
     fn test_module_with_11_imports_fails() {
         let items = (0..11)
-            .map(|i| Item::Import(make_import(&format!("lib{}", i))))
+            .map(|i| Item::Import(make_import(&format!("lib{i}"))))
             .collect();
         let module = make_module(vec![], None, items);
         let checker = PolicyChecker::with_defaults();
@@ -754,7 +755,7 @@ mod tests {
 
         // Check that errors contain useful information
         for violation in &violations {
-            let msg = format!("{}", violation);
+            let msg = format!("{violation}");
             assert!(msg.contains("bad_fn") || msg.contains("limit") || msg.contains("unsafe"));
         }
     }
@@ -856,10 +857,10 @@ mod tests {
         }
 
         let est = estimate.unwrap();
+        let est_tokens = est.total_tokens;
         assert!(
-            est.total_tokens > 10,
-            "Module should have > 10 tokens, has {}",
-            est.total_tokens
+            est_tokens > 10,
+            "Module should have > 10 tokens, has {est_tokens}"
         );
 
         let checker = PolicyChecker::with_defaults();
@@ -870,8 +871,7 @@ mod tests {
             violations
                 .iter()
                 .any(|v| matches!(v, PolicyViolation::CellContextBudgetExceeded { .. })),
-            "Should have CellContextBudgetExceeded violation, got: {:?}",
-            violations
+            "Should have CellContextBudgetExceeded violation, got: {violations:?}"
         );
     }
 }

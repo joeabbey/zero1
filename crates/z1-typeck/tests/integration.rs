@@ -212,6 +212,7 @@ fn test_http_server_example() {
         effects: vec!["pure".to_string()],
         body: z1_ast::Block {
             raw: "ret H.Res{ status:200, body:\"ok\" };".to_string(),
+            statements: vec![],
             span: make_span(),
         },
         span: make_span(),
@@ -228,6 +229,7 @@ fn test_http_server_example() {
         effects: vec!["net".to_string()],
         body: z1_ast::Block {
             raw: "H.listen(p, handler);".to_string(),
+            statements: vec![],
             span: make_span(),
         },
         span: make_span(),
@@ -242,5 +244,5 @@ fn test_http_server_example() {
 
     // Should type check successfully
     let result = check_module(&module);
-    assert!(result.is_ok(), "Expected Ok but got: {:?}", result);
+    assert!(result.is_ok(), "Expected Ok but got: {result:?}");
 }

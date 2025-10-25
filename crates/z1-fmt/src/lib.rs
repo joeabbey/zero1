@@ -314,27 +314,19 @@ impl<'a> Formatter<'a> {
     }
 
     fn section_break(&mut self) {
-        if self.sections_emitted == 0 {
-            if !self.buf.ends_with('\n') {
-                self.buf.push('\n');
-            }
-            if matches!(self.mode, Mode::Relaxed) && !self.buf.ends_with("\n\n") {
-                self.buf.push('\n');
-            }
-        } else {
-            if !self.buf.ends_with('\n') {
-                self.buf.push('\n');
-            }
+        if !self.buf.ends_with('\n') {
             self.buf.push('\n');
         }
-        if matches!(self.mode, Mode::Relaxed) && !self.buf.ends_with("\n\n") {
+        if (self.sections_emitted > 0 || matches!(self.mode, Mode::Relaxed))
+            && !self.buf.ends_with("\n\n")
+        {
             self.buf.push('\n');
         }
         self.sections_emitted += 1;
     }
 }
 
-struct SymbolTable {
+pub struct SymbolTable {
     long_to_short: HashMap<String, String>,
     short_to_long: HashMap<String, String>,
     style: SymMapStyle,
@@ -357,6 +349,29 @@ impl SymbolTable {
             short_to_long,
             style,
         }
+    }
+
+    /// Create a SymbolTable from a raw SymbolMap (for use in parser)
+    pub fn from_symbol_map(sym_map: &SymbolMap) -> Self {
+        let mut long_to_short = HashMap::new();
+        let mut short_to_long = HashMap::new();
+        for pair in &sym_map.pairs {
+            long_to_short.insert(pair.long.clone(), pair.short.clone());
+            short_to_long.insert(pair.short.clone(), pair.long.clone());
+        }
+        Self {
+            long_to_short,
+            short_to_long,
+            style: SymMapStyle::Respect,
+        }
+    }
+
+    /// Normalize an identifier to its canonical long form (for parser use)
+    pub fn normalize_ident(&self, ident: &str) -> String {
+        self.short_to_long
+            .get(ident)
+            .cloned()
+            .unwrap_or_else(|| ident.to_string())
     }
 
     fn display_ident(&self, ident: &str, mode: Mode) -> String {
@@ -389,6 +404,10 @@ impl SymbolTable {
     }
 }
 fn write_block(formatter: &mut Formatter<'_>, raw: &str) {
+    // NOTE: Function bodies are NOT transformed by SymbolMap - they are semantic content.
+    // Only top-level declarations (module, type, function names) are transformed.
+    // This ensures identifiers in function bodies contribute to semantic hash.
+
     if matches!(formatter.mode, Mode::Compact) {
         formatter.buf.push(' ');
         formatter.buf.push_str(raw);

@@ -3,6 +3,7 @@ use z1_ast::{
     Block, FnDecl, Import, Item, Module, ModulePath, Param, RecordField, Span, SymbolMap,
     SymbolPair, TypeDecl, TypeExpr,
 };
+use z1_fmt::SymbolTable;
 use z1_lex::{lex, Token, TokenKind};
 
 pub fn parse_module(source: &str) -> Result<Module, ParseError> {
@@ -26,6 +27,7 @@ struct Parser<'a> {
     source: &'a str,
     tokens: Vec<Token>,
     pos: usize,
+    symtable: SymbolTable,
 }
 
 impl<'a> Parser<'a> {
@@ -34,7 +36,13 @@ impl<'a> Parser<'a> {
             source,
             tokens,
             pos: 0,
+            symtable: SymbolTable::from_symbol_map(&SymbolMap::default()),
         }
+    }
+
+    /// Normalize an identifier to its canonical long form using the symbol table
+    fn normalize_ident(&self, ident: &str) -> String {
+        self.symtable.normalize_ident(ident)
     }
 
     fn parse(mut self) -> Result<Module, ParseError> {
@@ -60,6 +68,31 @@ impl<'a> Parser<'a> {
             }
         }
 
+        // CRITICAL: Parse symbol map FIRST and build the symbol table
+        // This must happen before any declarations so we can normalize identifiers
+        let mut symbol_map_item: Option<SymbolMap> = None;
+        let saved_pos = self.pos;
+
+        // Scan for symbol map
+        while !self.at(TokenKind::Eof) {
+            if self.at(TokenKind::Sym) {
+                symbol_map_item = Some(self.parse_symbol_map()?);
+                break;
+            } else if matches!(self.peek().kind, TokenKind::KwType | TokenKind::KwFn) {
+                // Stop if we hit a declaration before finding symbol map
+                break;
+            } else {
+                self.advance();
+            }
+        }
+
+        // Reset position and build symbol table
+        self.pos = saved_pos;
+        if let Some(ref sym_map) = symbol_map_item {
+            self.symtable = SymbolTable::from_symbol_map(sym_map);
+        }
+
+        // Now parse all items (including symbol map again, which is OK)
         let mut items = Vec::new();
         while !self.at(TokenKind::Eof) {
             match self.peek().kind {
@@ -145,11 +178,9 @@ impl<'a> Parser<'a> {
         let path_token = self.expect(TokenKind::String, "string import path")?;
         let alias = if self.at(TokenKind::KwAs) {
             self.advance();
-            Some(
-                self.expect(TokenKind::Ident, "alias identifier")?
-                    .lexeme
-                    .clone(),
-            )
+            let alias_token = self.expect(TokenKind::Ident, "alias identifier")?;
+            // Normalize alias to long form
+            Some(self.normalize_ident(&alias_token.lexeme))
         } else {
             None
         };
@@ -159,7 +190,8 @@ impl<'a> Parser<'a> {
             let mut list = Vec::new();
             while !self.at(TokenKind::RBracket) && !self.at(TokenKind::Eof) {
                 let item = self.expect(TokenKind::Ident, "only identifier")?;
-                list.push(item.lexeme.clone());
+                // Normalize each imported item to long form
+                list.push(self.normalize_ident(&item.lexeme));
                 if self.at(TokenKind::Comma) {
                     self.advance();
                 } else {
@@ -223,7 +255,7 @@ impl<'a> Parser<'a> {
         }
         let end_span = self.previous().span;
         Ok(TypeDecl {
-            name: name.lexeme,
+            name: self.normalize_ident(&name.lexeme), // Normalize to long form
             expr,
             span: Span::new(start.start, end_span.end),
         })
@@ -243,11 +275,11 @@ impl<'a> Parser<'a> {
 
     fn parse_path_type(&mut self) -> Result<TypeExpr, ParseError> {
         let ident = self.expect(TokenKind::Ident, "type identifier")?;
-        let mut segments = vec![ident.lexeme];
+        let mut segments = vec![self.normalize_ident(&ident.lexeme)]; // Normalize
         while self.at(TokenKind::Dot) {
             self.advance();
             let segment = self.expect(TokenKind::Ident, "path segment")?;
-            segments.push(segment.lexeme);
+            segments.push(self.normalize_ident(&segment.lexeme)); // Normalize
         }
         Ok(TypeExpr::Path(segments))
     }
@@ -261,7 +293,7 @@ impl<'a> Parser<'a> {
             let ty = self.parse_type_expr()?;
             let field_span = Span::new(name.span.start, self.previous().span.end);
             fields.push(RecordField {
-                name: name.lexeme,
+                name: self.normalize_ident(&name.lexeme), // Normalize field name
                 ty: Box::new(ty),
                 span: field_span,
             });
@@ -290,7 +322,7 @@ impl<'a> Parser<'a> {
         };
         let body = self.parse_block()?;
         Ok(FnDecl {
-            name: name.lexeme,
+            name: self.normalize_ident(&name.lexeme), // CRITICAL: Normalize function name
             params,
             ret,
             effects,
@@ -311,7 +343,7 @@ impl<'a> Parser<'a> {
             let ty = self.parse_type_expr()?;
             let span = Span::new(name.span.start, self.previous().span.end);
             params.push(Param {
-                name: name.lexeme,
+                name: self.normalize_ident(&name.lexeme), // Normalize parameter name
                 ty,
                 span,
             });
@@ -369,6 +401,7 @@ impl<'a> Parser<'a> {
         let raw = self.source[start_idx..end_idx].to_string();
         Ok(Block {
             raw,
+            statements: Vec::new(),
             span: Span::new(open.span.start, end_span.end),
         })
     }
@@ -459,7 +492,8 @@ mod tests {
 
         match &module.items[3] {
             Item::Fn(FnDecl { name, params, .. }) => {
-                assert_eq!(name, "h");
+                // Parser normalizes to long form: "h" -> "handler"
+                assert_eq!(name, "handler");
                 assert_eq!(params.len(), 1);
             }
             other => panic!("expected fn decl, got {other:?}"),

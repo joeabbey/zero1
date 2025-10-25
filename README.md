@@ -36,6 +36,9 @@ cargo run -p z1-cli -- fmt cells/http.server.z1c --check
 
 # Hash a cell (outputs SemHash and FormHash)
 cargo run -p z1-cli -- hash cells/http.server.z1c
+
+# Capture benchmark metrics (see docs/benchmarks.md)
+cargo run -p z1-cli -- bench --continue-on-error --output benchmarks/$(git rev-parse --short HEAD).json
 ```
 
 ## Language Features

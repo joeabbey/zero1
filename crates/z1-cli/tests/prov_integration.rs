@@ -64,7 +64,7 @@ fn create_test_chain_with_signatures(dir: &TempDir) -> (PathBuf, PathBuf) {
 #[test]
 fn test_prov_keygen() {
     let output = Command::new(cli_bin())
-        .args(&["prov", "keygen"])
+        .args(["prov", "keygen"])
         .output()
         .expect("failed to execute z1-cli");
 
@@ -81,7 +81,7 @@ fn test_prov_keygen_to_file() {
     let output_path = dir.path().join("keypair.json");
 
     let output = Command::new(cli_bin())
-        .args(&["prov", "keygen", output_path.to_str().unwrap()])
+        .args(["prov", "keygen", output_path.to_str().unwrap()])
         .output()
         .expect("failed to execute z1-cli");
 
@@ -100,7 +100,7 @@ fn test_prov_log() {
     let (chain_path, _) = create_test_chain_with_signatures(&dir);
 
     let output = Command::new(cli_bin())
-        .args(&["prov", "log", chain_path.to_str().unwrap()])
+        .args(["prov", "log", chain_path.to_str().unwrap()])
         .output()
         .expect("failed to execute z1-cli");
 
@@ -118,7 +118,7 @@ fn test_prov_verify_valid_chain() {
     let (chain_path, keys_path) = create_test_chain_with_signatures(&dir);
 
     let output = Command::new(cli_bin())
-        .args(&[
+        .args([
             "prov",
             "verify",
             chain_path.to_str().unwrap(),
@@ -140,7 +140,7 @@ fn test_prov_verify_without_keys() {
     let (chain_path, _) = create_test_chain_with_signatures(&dir);
 
     let output = Command::new(cli_bin())
-        .args(&["prov", "verify", chain_path.to_str().unwrap()])
+        .args(["prov", "verify", chain_path.to_str().unwrap()])
         .output()
         .expect("failed to execute z1-cli");
 
@@ -153,7 +153,7 @@ fn test_prov_verify_without_keys() {
 #[test]
 fn test_prov_verify_missing_file() {
     let output = Command::new(cli_bin())
-        .args(&["prov", "verify", "/nonexistent/file.z1p"])
+        .args(["prov", "verify", "/nonexistent/file.z1p"])
         .output()
         .expect("failed to execute z1-cli");
 
@@ -169,7 +169,7 @@ fn test_prov_log_empty_chain() {
     chain.save_to_file(&chain_path).unwrap();
 
     let output = Command::new(cli_bin())
-        .args(&["prov", "log", chain_path.to_str().unwrap()])
+        .args(["prov", "log", chain_path.to_str().unwrap()])
         .output()
         .expect("failed to execute z1-cli");
 

@@ -120,17 +120,19 @@ pub fn run(args: BenchArgs) -> Result<()> {
         formhash: hashes.format,
     };
 
-    let mut ctx_config = EstimateConfig::default();
-    ctx_config.enforce_budget = false;
+    let ctx_config = EstimateConfig {
+        enforce_budget: false,
+        ..EstimateConfig::default()
+    };
     let ctx_estimate = estimate_cell_with_config(&module, &ctx_config)?;
     let context_metrics = ContextMetrics::from_estimate(&ctx_estimate);
 
     let mut commands = Vec::new();
-    let command_specs = [
-        ("cargo fmt", vec!["cargo", "fmt", "--all"]),
+    let command_specs: &[(&str, &[&str])] = &[
+        ("cargo fmt", &["cargo", "fmt", "--all"]),
         (
             "cargo clippy",
-            vec![
+            &[
                 "cargo",
                 "clippy",
                 "--workspace",
@@ -143,18 +145,17 @@ pub fn run(args: BenchArgs) -> Result<()> {
         ),
         (
             "cargo test",
-            vec!["cargo", "test", "--workspace", "--all-targets"],
+            &["cargo", "test", "--workspace", "--all-targets"],
         ),
     ];
 
     for (label, args_vec) in command_specs {
-        let report = run_shell_command(label, &args_vec, &repo_root)?;
+        let report = run_shell_command(label, args_vec, &repo_root)?;
         let success = report.success;
         commands.push(report);
         if !success && !args.continue_on_error {
             bail!(
-                "command '{}' failed (rerun with --continue-on-error to collect remaining metrics)",
-                label
+                "command '{label}' failed (rerun with --continue-on-error to collect remaining metrics)"
             );
         }
     }
@@ -196,8 +197,8 @@ impl CellMetrics {
     fn new(fmt_mode: Mode, fmt_clean: bool, compact: &str, relaxed: &str) -> Self {
         let compact_chars = compact.chars().count();
         let relaxed_chars = relaxed.chars().count();
-        let compact_bytes = compact.as_bytes().len();
-        let relaxed_bytes = relaxed.as_bytes().len();
+        let compact_bytes = compact.len();
+        let relaxed_bytes = relaxed.len();
         let compression_ratio = if compact_bytes > 0 {
             Some((relaxed_bytes as f64 / compact_bytes as f64 * 10_000.0).round() / 10_000.0)
         } else {
@@ -250,7 +251,7 @@ fn run_shell_command(label: &str, args: &[&str], root: &Path) -> Result<CommandR
     let started = Instant::now();
     let output = command
         .output()
-        .with_context(|| format!("failed to run {}", label))?;
+        .with_context(|| format!("failed to run {label}"))?;
     let duration = started.elapsed().as_secs_f64();
     let stdout = capture_output(&output.stdout);
     let stderr = capture_output(&output.stderr);
@@ -303,7 +304,7 @@ fn format_command_string(args: &[&str]) -> String {
     args.iter()
         .map(|arg| {
             if arg.chars().any(char::is_whitespace) {
-                format!("{:?}", arg)
+                format!("{arg:?}")
             } else {
                 (*arg).to_string()
             }

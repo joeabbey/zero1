@@ -135,7 +135,50 @@ fn hash_param(hasher: &mut HashState, param: &Param) {
 }
 
 fn hash_block(hasher: &mut HashState, block: &Block) {
-    feed_str(hasher, &block.raw);
+    // Normalize the raw text to exclude formatting variations.
+    // This ensures semantic hash invariance across compact/relaxed transformations.
+    let normalized = normalize_block_text(&block.raw);
+    feed_str(hasher, &normalized);
+}
+
+/// Normalize block text by removing all whitespace except within string literals.
+/// This ensures that formatting differences (indentation, newlines, etc.) don't affect the semantic hash.
+fn normalize_block_text(raw: &str) -> String {
+    let mut result = String::with_capacity(raw.len());
+    let mut in_string = false;
+    let mut escaped = false;
+    let chars = raw.chars();
+
+    for ch in chars {
+        if escaped {
+            result.push(ch);
+            escaped = false;
+            continue;
+        }
+
+        match ch {
+            '\\' if in_string => {
+                result.push(ch);
+                escaped = true;
+            }
+            '"' => {
+                in_string = !in_string;
+                result.push(ch);
+            }
+            _ if in_string => {
+                result.push(ch);
+            }
+            _ if ch.is_whitespace() => {
+                // Skip all whitespace outside strings
+                continue;
+            }
+            _ => {
+                result.push(ch);
+            }
+        }
+    }
+
+    result
 }
 
 fn feed_str(hasher: &mut HashState, value: &str) {

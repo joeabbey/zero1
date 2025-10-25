@@ -26,6 +26,7 @@ fn make_fn_with_effects(name: &str, effects: Vec<&str>, span: Span) -> FnDecl {
         effects: effects.into_iter().map(String::from).collect(),
         body: Block {
             raw: "{ ret Unit; }".to_string(),
+            statements: vec![],
             span,
         },
         span,
@@ -206,8 +207,7 @@ fn test_all_effect_types() {
         } else {
             assert!(
                 check_module(&module).is_ok(),
-                "Effect {} should be valid with matching capability",
-                effect
+                "Effect {effect} should be valid with matching capability"
             );
         }
     }

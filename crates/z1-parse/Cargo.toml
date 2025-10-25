@@ -11,4 +11,5 @@ anyhow.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 z1-ast = { path = "../z1-ast" }
+z1-fmt = { path = "../z1-fmt" }
 z1-lex = { path = "../z1-lex" }

@@ -131,9 +131,168 @@ pub struct Param {
     pub span: Span,
 }
 
-/// Placeholder for statements until the full AST exists.
+/// Block of statements (function body or control flow body)
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct Block {
+    /// Raw source text captured during parsing (temporary until full formatter/AST round-trip)
     pub raw: String,
+    /// Parsed statements (may be empty until statement parsing is complete)
+    pub statements: Vec<Stmt>,
     pub span: Span,
+}
+
+/// Statement types
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Stmt {
+    Let(LetStmt),
+    Assign(AssignStmt),
+    If(IfStmt),
+    While(WhileStmt),
+    Return(ReturnStmt),
+    Expr(ExprStmt),
+}
+
+/// Let binding: `let x: Type = expr;` or `let mut x = expr;`
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct LetStmt {
+    pub mutable: bool,
+    pub name: Ident,
+    pub ty: Option<TypeExpr>,
+    pub init: Expr,
+    pub span: Span,
+}
+
+/// Assignment: `x = expr;` or `obj.field = expr;`
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AssignStmt {
+    pub target: Expr, // Should be an LValue (identifier or field access)
+    pub value: Expr,
+    pub span: Span,
+}
+
+/// If statement: `if cond { ... } else { ... }`
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct IfStmt {
+    pub cond: Expr,
+    pub then_block: Block,
+    pub else_block: Option<Box<ElseBlock>>,
+    pub span: Span,
+}
+
+/// Else block can be another block or another if statement (else-if)
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ElseBlock {
+    Block(Block),
+    If(IfStmt),
+}
+
+/// While loop: `while cond { ... }`
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct WhileStmt {
+    pub cond: Expr,
+    pub body: Block,
+    pub span: Span,
+}
+
+/// Return statement: `return expr;` or `return;`
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ReturnStmt {
+    pub value: Option<Expr>,
+    pub span: Span,
+}
+
+/// Expression statement: `expr;`
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ExprStmt {
+    pub expr: Expr,
+    pub span: Span,
+}
+
+/// Expressions
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Expr {
+    /// Identifier: `x`
+    Ident(Ident, Span),
+    /// Literal value: `42`, `"hello"`, `true`
+    Literal(Literal, Span),
+    /// Binary operation: `a + b`, `x == y`
+    BinOp {
+        lhs: Box<Expr>,
+        op: BinOp,
+        rhs: Box<Expr>,
+        span: Span,
+    },
+    /// Unary operation: `-x`, `!flag`, `await task`
+    UnaryOp {
+        op: UnaryOp,
+        expr: Box<Expr>,
+        span: Span,
+    },
+    /// Function call: `foo(a, b)`
+    Call {
+        func: Box<Expr>,
+        args: Vec<Expr>,
+        span: Span,
+    },
+    /// Field access: `obj.field`
+    Field {
+        base: Box<Expr>,
+        field: Ident,
+        span: Span,
+    },
+    /// Record initialization: `Point { x: 1, y: 2 }`
+    Record { fields: Vec<RecordInit>, span: Span },
+    /// Qualified path: `H.Req`, `std.io.File`
+    Path(Vec<Ident>, Span),
+    /// Parenthesized expression: `(expr)`
+    Paren(Box<Expr>, Span),
+}
+
+/// Record field initialization in an expression
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RecordInit {
+    pub name: Ident,
+    pub value: Expr,
+    pub span: Span,
+}
+
+/// Literal values
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Literal {
+    Bool(bool),
+    Str(String),
+    U16(u16),
+    U32(u32),
+    U64(u64),
+    Int(i64), // Unsuffixed integer
+    Unit,     // ()
+}
+
+/// Binary operators
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum BinOp {
+    // Arithmetic
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Mod,
+    // Comparison
+    Eq,
+    Ne,
+    Lt,
+    Le,
+    Gt,
+    Ge,
+    // Logical
+    And,
+    Or,
+}
+
+/// Unary operators
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum UnaryOp {
+    Neg,   // -
+    Not,   // !
+    Await, // await
 }

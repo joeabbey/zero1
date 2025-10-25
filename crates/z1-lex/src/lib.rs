@@ -10,6 +10,7 @@ pub struct Token {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TokenKind {
+    // Keywords
     KwModule,
     KwUse,
     KwAs,
@@ -19,21 +20,48 @@ pub enum TokenKind {
     KwType,
     KwFn,
     KwEff,
+    KwLet,
+    KwMut,
+    KwIf,
+    KwElse,
+    KwWhile,
+    KwReturn,
+    KwTrue,
+    KwFalse,
+    // Identifiers and literals
     Ident,
     Number,
     String,
+    // Delimiters
     LParen,
     RParen,
     LBrace,
     RBrace,
     LBracket,
     RBracket,
+    // Punctuation
     Comma,
     Dot,
     Colon,
     Semi,
+    // Operators
     Eq,
+    EqEq,
+    Ne,
+    Lt,
+    Le,
+    Gt,
+    Ge,
+    Plus,
+    Minus,
+    Star,
+    Slash,
+    Percent,
+    And,
+    Or,
+    Not,
     Arrow,
+    // Special
     Sym,
     Hash,
     Unknown,
@@ -47,6 +75,7 @@ enum RawToken {
     #[regex(r"/\*([^*]|\*+[^*/])*\*+/", logos::skip)]
     Error,
 
+    // Keywords (order matters for longer tokens first)
     #[token("module")]
     #[token("m")]
     KwModule,
@@ -78,6 +107,32 @@ enum RawToken {
     #[token("eff")]
     KwEff,
 
+    #[token("let")]
+    KwLet,
+
+    #[token("mut")]
+    KwMut,
+
+    #[token("if")]
+    KwIf,
+
+    #[token("else")]
+    KwElse,
+
+    #[token("while")]
+    KwWhile,
+
+    #[token("return")]
+    #[token("ret")]
+    KwReturn,
+
+    #[token("true")]
+    KwTrue,
+
+    #[token("false")]
+    KwFalse,
+
+    // Identifiers and literals (after keywords)
     #[regex(r"[A-Za-z_][A-Za-z0-9_\.]*")]
     Ident,
 
@@ -87,6 +142,7 @@ enum RawToken {
     #[regex(r#""([^"\\]|\\.)*""#)]
     String,
 
+    // Delimiters
     #[token("(")]
     LParen,
     #[token(")")]
@@ -99,6 +155,8 @@ enum RawToken {
     LBracket,
     #[token("]")]
     RBracket,
+
+    // Punctuation
     #[token(",")]
     Comma,
     #[token(".")]
@@ -107,10 +165,44 @@ enum RawToken {
     Colon,
     #[token(";")]
     Semi,
-    #[token("=")]
-    Eq,
+
+    // Operators (longer tokens first!)
+    #[token("==")]
+    EqEq,
+    #[token("!=")]
+    Ne,
+    #[token("<=")]
+    Le,
+    #[token(">=")]
+    Ge,
+    #[token("&&")]
+    And,
+    #[token("||")]
+    Or,
     #[token("->")]
     Arrow,
+
+    // Single-char operators (after multi-char)
+    #[token("=")]
+    Eq,
+    #[token("<")]
+    Lt,
+    #[token(">")]
+    Gt,
+    #[token("+")]
+    Plus,
+    #[token("-")]
+    Minus,
+    #[token("*")]
+    Star,
+    #[token("/")]
+    Slash,
+    #[token("%")]
+    Percent,
+    #[token("!")]
+    Not,
+
+    // Special
     #[token("#sym")]
     Sym,
     #[token("#")]
@@ -129,6 +221,14 @@ impl From<RawToken> for TokenKind {
             RawToken::KwType => TokenKind::KwType,
             RawToken::KwFn => TokenKind::KwFn,
             RawToken::KwEff => TokenKind::KwEff,
+            RawToken::KwLet => TokenKind::KwLet,
+            RawToken::KwMut => TokenKind::KwMut,
+            RawToken::KwIf => TokenKind::KwIf,
+            RawToken::KwElse => TokenKind::KwElse,
+            RawToken::KwWhile => TokenKind::KwWhile,
+            RawToken::KwReturn => TokenKind::KwReturn,
+            RawToken::KwTrue => TokenKind::KwTrue,
+            RawToken::KwFalse => TokenKind::KwFalse,
             RawToken::Ident => TokenKind::Ident,
             RawToken::Number => TokenKind::Number,
             RawToken::String => TokenKind::String,
@@ -142,7 +242,21 @@ impl From<RawToken> for TokenKind {
             RawToken::Dot => TokenKind::Dot,
             RawToken::Colon => TokenKind::Colon,
             RawToken::Semi => TokenKind::Semi,
+            RawToken::EqEq => TokenKind::EqEq,
+            RawToken::Ne => TokenKind::Ne,
+            RawToken::Le => TokenKind::Le,
+            RawToken::Ge => TokenKind::Ge,
+            RawToken::And => TokenKind::And,
+            RawToken::Or => TokenKind::Or,
             RawToken::Eq => TokenKind::Eq,
+            RawToken::Lt => TokenKind::Lt,
+            RawToken::Gt => TokenKind::Gt,
+            RawToken::Plus => TokenKind::Plus,
+            RawToken::Minus => TokenKind::Minus,
+            RawToken::Star => TokenKind::Star,
+            RawToken::Slash => TokenKind::Slash,
+            RawToken::Percent => TokenKind::Percent,
+            RawToken::Not => TokenKind::Not,
             RawToken::Arrow => TokenKind::Arrow,
             RawToken::Sym => TokenKind::Sym,
             RawToken::Hash => TokenKind::Hash,

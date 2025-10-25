@@ -1,0 +1,67 @@
+{
+  "meta": {
+    "git_head": "8a57ad0118fdc57a47d1b38bc41ab62d945a397a",
+    "timestamp": "2025-10-25T21:51:01.870844+00:00",
+    "cell": "fixtures/cells/http_server.z1c",
+    "cell_metrics": {
+      "fmt_mode": "compact",
+      "fmt_clean": false,
+      "compact_chars": 273,
+      "compact_bytes": 273,
+      "relaxed_chars": 355,
+      "relaxed_bytes": 359,
+      "compression_ratio": 1.315
+    },
+    "hashes": {
+      "semhash": "3b16b2451dae3caec498d4e2ad13070cf6b040f6df99bc46927b39c5e0be68fc",
+      "formhash": "ef0ab5f0908680f96001359d8ae264943395d39eac0bac3dc782b895cb2aa267"
+    },
+    "context": {
+      "total_tokens": 72,
+      "budget": 128,
+      "usage_percent": 56.25,
+      "char_count": 273,
+      "functions": [
+        {
+          "name": "h",
+          "tokens": 18,
+          "chars": 68
+        },
+        {
+          "name": "sv",
+          "tokens": 13,
+          "chars": 49
+        }
+      ]
+    }
+  },
+  "commands": [
+    {
+      "label": "cargo fmt",
+      "command": "cargo fmt --all",
+      "duration_s": 0.129272583,
+      "exit_code": 0,
+      "success": true,
+      "stdout": null,
+      "stderr": null
+    },
+    {
+      "label": "cargo clippy",
+      "command": "cargo clippy --workspace --all-targets --all-features -- -D warnings",
+      "duration_s": 0.3747485,
+      "exit_code": 101,
+      "success": false,
+      "stdout": null,
+      "stderr": "    Checking z1-prov v0.1.0 (/Users/joeabbey/src/github.com/joeabbey/zero1/crates/z1-prov)\n    Checking z1-policy v0.1.0 (/Users/joeabbey/src/github.com/joeabbey/zero1/crates/z1-policy)\n    Checking z1-typeck v0.1.0 (/Users/joeabbey/src/github.com/joeabbey/zero1/crates/z1-typeck)\n    Checking z1-ctx v0.1.0 (/Users/joeabbey/src/github.com/joeabbey/zero1/crates/z1-ctx)\n    Checking z1-cli v0.1.0 (/Users/joeabbey/src/github.com/joeabbey/zero1/crates/z1-cli)\n    Checking z1-effects v0.1.0 (/Users/joeabbey/src/github.com/joeabbey/zero1/crates/z1-effects)\nerror: variables can be used directly in the `format!` string\n   --> crates/z1-typeck/tests/integration.rs:245:5\n    |\n245 |     assert!(result.is_ok(), \"Expected Ok but got: {:?}\", result);\n    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    |\n    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#uninlined_format_args\n    = note: `-D clippy::uninlined-format-args` implied by `-D warnings`\n    = help: to override `-D warnings` add `#[allow(clippy::uninlined_format_args)]`\nhelp: change this to\n    |\n245 -     assert!(result.is_ok(), \"Expected Ok but got: {:?}\", result);\n245 +     assert!(result.is_ok(), \"Expected Ok but got: {result:?}\");\n    |\n\nerror: the borrowed expression implements the required traits\n  --> crates/z1-cli/tests/prov_integration.rs:67:15\n   |\n67 |         .args(&[\"prov\", \"keygen\"])\n   |               ^^^^^^^^^^^^^^^^^^^ help: change this to: `[\"prov\", \"keygen\"]`\n   |\n   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_borrows_for_generic_args\n   = note: `-D clippy::needless-borrows-for-generic-args` implied by `-D warnings`\n   = help: to override `-D warnings` add `#[allow(clippy::needless_borrows_for_generic_args)]`\n\nerror: the borrowed expression implements the required traits\n  --> crates/z1-cli/tests/prov_integration.rs:84:15\n   |\n84 |         .args(&[\"prov\", \"keygen\", output...[truncated 13139 bytes]"
+    },
+    {
+      "label": "cargo test",
+      "command": "cargo test --workspace --all-targets",
+      "duration_s": 0.390999125,
+      "exit_code": 101,
+      "success": false,
+      "stdout": "\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 7 tests\ntest test_prov_verify_missing_file ... ok\ntest test_prov_keygen ... ok\ntest test_prov_log_empty_chain ... ok\ntest test_prov_keygen_to_file ... ok\ntest test_prov_verify_without_keys ... ok\ntest test_prov_log ... ok\ntest test_prov_verify_valid_chain ... ok\n\ntest result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.27s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 2 tests\ntest tests::test_estimate_tokens_custom_ratio ... ok\ntest tests::test_estimate_tokens_from_chars ... ok\n\ntest result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 12 tests\ntest test_empty_module ... ok\ntest test_basic_estimation ... ok\ntest test_custom_chars_per_token ... ok\ntest test_display_format ... ok\ntest test_estimation_with_budget_exceeded ... ok\ntest test_estimation_with_budget_ok ... ok\ntest test_no_enforce_budget ... ok\ntest test_module_with_imports_and_types ... ok\ntest test_multiple_functions ... ok\ntest test_suggestion_for_single_function ... ok\ntest test_suggestion_for_multiple_functions ... ok\ntest test_http_server_fixture ... ok\n\ntest result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 12 tests\ntest tests::test_can_call_multiple_effects ... ok\ntest tests::test_can_call_pure_from_anywhere ... ok\ntest tests::test_can_call_subset_rule ... ok\ntest tests::test_case_insensitive_effects ... ok\ntest tests::test_missing_capability_fails ... ok\ntest tests::test_multiple_effects_all_caps_present ... ok\ntest tests::test_multiple_effects_missing_one...[truncated 2582 bytes]",
+      "stderr": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s\n     Running unittests src/lib.rs (target/debug/deps/z1_ast-55003a4f7e0b0005)\n     Running unittests src/main.rs (target/debug/deps/z1_cli-0ed3284893981eaa)\n     Running tests/prov_integration.rs (target/debug/deps/prov_integration-687608674d2b1911)\n     Running unittests src/lib.rs (target/debug/deps/z1_codegen_ts-2f1a70bc783361cd)\n     Running unittests src/lib.rs (target/debug/deps/z1_codegen_wasm-be2fbe171eff5af3)\n     Running unittests src/lib.rs (target/debug/deps/z1_ctx-90d7866deadd3682)\n     Running tests/estimator.rs (target/debug/deps/estimator-fbb56d027538df1b)\n     Running unittests src/lib.rs (target/debug/deps/z1_effects-1a170303ddd695bd)\n     Running tests/integration.rs (target/debug/deps/integration-2289e6c6aded02e1)\n     Running unittests src/lib.rs (target/debug/deps/z1_fmt-a3ad7e664f53752f)\n     Running tests/formatter.rs (target/debug/deps/formatter-5edb962ebeb3e7b0)\nerror: test failed, to rerun pass `-p z1-fmt --test formatter`\n"
+    }
+  ]
+}

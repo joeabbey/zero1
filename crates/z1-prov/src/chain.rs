@@ -302,7 +302,7 @@ mod tests {
         let mut chain = ProvenanceChain::new();
 
         for i in 1..=100 {
-            let entry = create_test_entry(&format!("cell:test@v{}", i), "agent:test");
+            let entry = create_test_entry(&format!("cell:test@v{i}"), "agent:test");
             chain.append(entry).unwrap();
         }
 
