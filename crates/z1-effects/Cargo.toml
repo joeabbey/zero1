@@ -10,3 +10,4 @@ publish = false
 anyhow.workspace = true
 serde.workspace = true
 thiserror.workspace = true
+z1-ast = { path = "../z1-ast" }
