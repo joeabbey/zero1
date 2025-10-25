@@ -14,9 +14,9 @@ Zero1 (Z1) is a Rust-based toolchain plus language optimized for LLM agent workf
 
 ## 3. Milestones with Actionable Tasks
 ### M0 – Core Bootstrapping (Week 0‑1)
-- [ ] Scaffold Cargo workspace per `docs/design.md` (create `crates/z1-*`, shared `Cargo.toml`).
-- [ ] Implement lexer/token enums with dual keyword support; add snapshot tests covering compact vs relaxed samples.
-- [ ] Build parser + AST (include `SymbolMap`); block semantic fields per design.
+- [x] Scaffold Cargo workspace per `docs/design.md` (create `crates/z1-*`, shared `Cargo.toml`).
+- [x] Implement lexer/token enums with dual keyword support; add snapshot tests covering compact vs relaxed samples.
+- [ ] Build parser + AST (include `SymbolMap`); block semantic fields per design. _(🚧 header + imports parsed; SymbolMap + decls pending)_
 - [ ] Implement canonical SemHash/FormHash functions and golden tests.
 - [ ] Ship `z1fmt` MVP supporting compact↔relaxed round-trip on sample cells.
 
@@ -39,7 +39,7 @@ Zero1 (Z1) is a Rust-based toolchain plus language optimized for LLM agent workf
 - [ ] Add end-to-end integration test: manifest → build → provenance verify.
 
 ## 4. Cross-Cutting Tasks
-- [ ] Author CONTRIBUTING + `AGENTS.md` (done) plus crate-level READMEs to give subagents quick starts.
+- [x] Author CONTRIBUTING + `AGENTS.md` (guide published) plus crate-level READMEs to give subagents quick starts.
 - [ ] Add CI pipeline (fmt, clippy, cargo test, `z1test`) with artifact caching.
 - [ ] Create template packs (`examples/http-example/`) for regression; keep snapshots updated.
 - [ ] Track security items: capability audits, SDict handling, provenance replays.
@@ -51,5 +51,7 @@ Zero1 (Z1) is a Rust-based toolchain plus language optimized for LLM agent workf
 
 ## 6. Immediate Next Steps
 1. ✅ Confirm AGENTS guide (done).
-2. [ ] Initialize Cargo workspace + minimal crates.
-3. [ ] Draft lexer/parser scaffolding with fixture cells to unblock downstream agents.
+2. ✅ Initialize Cargo workspace + minimal crates.
+3. ✅ Draft lexer/parser scaffolding with fixture cells to unblock downstream agents.
+4. [ ] Extend AST + parser with SymbolMap, type/fn decl placeholders, and richer tests.
+5. [ ] Sketch SemHash/FormHash crate API (`z1-hash`) and wire into CLI for smoke tests.

@@ -1,0 +1,3 @@
+m http.server:1.0 ctx=128 caps=[net]
+
+u "std/http" as H only [listen, Req, Res]
