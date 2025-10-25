@@ -27,7 +27,7 @@ Zero1 (Z1) is a Rust-based toolchain plus language optimized for LLM agent workf
 - [ ] **[Future]** Extend `z1fmt` to expand identifiers in function bodies (requires statement AST or text scanner).
 
 ### M2 – Provenance, Policy, Testing (Week 2‑3)
-- [ ] Implement append-only provenance store + Merkle root calculation.
+- [x] Implement append-only provenance store + Merkle root calculation. _(Complete: `z1-prov` crate with 36 passing tests; SHA3-256 hashing, Merkle chain verification, Ed25519 signatures, file I/O)_
 - [ ] Wire Ed25519 signature verification + CLI commands (`z1prov log`, `z1prov verify`).
 - [ ] Enforce policy gates (caps, ctx budgets, AST size) during compilation.
 - [ ] Stand up Rust property tests + `.z1t` prompt-test harness with sample packs in `examples/`.
