@@ -6,8 +6,8 @@ license.workspace = true
 rust-version.workspace = true
 publish = false
 
-[dependencies]
-blake3.workspace = true
+ [dependencies]
+sha3.workspace = true
 z1-ast = { path = "../z1-ast" }
 
 [dev-dependencies]

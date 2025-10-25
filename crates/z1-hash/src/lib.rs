@@ -1,7 +1,9 @@
-use blake3::Hasher;
+use sha3::{Digest, Sha3_256};
 use z1_ast::{
     Block, FnDecl, Import, Item, Module, Param, RecordField, SymbolMap, TypeDecl, TypeExpr,
 };
+
+type HashState = Sha3_256;
 
 /// Container for both semantic and format hashes.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -18,7 +20,7 @@ pub fn module_hashes(module: &Module) -> ModuleHashes {
 }
 
 fn hash_module(module: &Module, include_symbol_map: bool) -> String {
-    let mut hasher = Hasher::new();
+    let mut hasher = Sha3_256::new();
     feed_str(&mut hasher, "module");
     for segment in module.path.as_str_vec() {
         feed_str(&mut hasher, segment);
@@ -40,10 +42,11 @@ fn hash_module(module: &Module, include_symbol_map: bool) -> String {
     for item in &module.items {
         hash_item(&mut hasher, item, include_symbol_map);
     }
-    hasher.finalize().to_hex().to_string()
+    let digest = hasher.finalize();
+    format!("{:x}", digest)
 }
 
-fn hash_item(hasher: &mut Hasher, item: &Item, include_symbol_map: bool) {
+fn hash_item(hasher: &mut HashState, item: &Item, include_symbol_map: bool) {
     match item {
         Item::Import(import) => {
             feed_str(hasher, "import");
@@ -66,7 +69,7 @@ fn hash_item(hasher: &mut Hasher, item: &Item, include_symbol_map: bool) {
     }
 }
 
-fn hash_import(hasher: &mut Hasher, import: &Import) {
+fn hash_import(hasher: &mut HashState, import: &Import) {
     feed_str(hasher, &import.path);
     feed_opt_str(hasher, import.alias.as_deref());
     hasher.update(&(import.only.len() as u32).to_le_bytes());
@@ -75,7 +78,7 @@ fn hash_import(hasher: &mut Hasher, import: &Import) {
     }
 }
 
-fn hash_symbol_map(hasher: &mut Hasher, symbols: &SymbolMap) {
+fn hash_symbol_map(hasher: &mut HashState, symbols: &SymbolMap) {
     hasher.update(&(symbols.pairs.len() as u32).to_le_bytes());
     for pair in &symbols.pairs {
         feed_str(hasher, &pair.long);
@@ -83,12 +86,12 @@ fn hash_symbol_map(hasher: &mut Hasher, symbols: &SymbolMap) {
     }
 }
 
-fn hash_type_decl(hasher: &mut Hasher, ty: &TypeDecl) {
+fn hash_type_decl(hasher: &mut HashState, ty: &TypeDecl) {
     feed_str(hasher, &ty.name);
     hash_type_expr(hasher, &ty.expr);
 }
 
-fn hash_type_expr(hasher: &mut Hasher, expr: &TypeExpr) {
+fn hash_type_expr(hasher: &mut HashState, expr: &TypeExpr) {
     match expr {
         TypeExpr::Path(segments) => {
             feed_str(hasher, "path");
@@ -107,12 +110,12 @@ fn hash_type_expr(hasher: &mut Hasher, expr: &TypeExpr) {
     }
 }
 
-fn hash_record_field(hasher: &mut Hasher, field: &RecordField) {
+fn hash_record_field(hasher: &mut HashState, field: &RecordField) {
     feed_str(hasher, &field.name);
     hash_type_expr(hasher, &field.ty);
 }
 
-fn hash_fn_decl(hasher: &mut Hasher, func: &FnDecl) {
+fn hash_fn_decl(hasher: &mut HashState, func: &FnDecl) {
     feed_str(hasher, &func.name);
     hasher.update(&(func.params.len() as u32).to_le_bytes());
     for param in &func.params {
@@ -126,21 +129,21 @@ fn hash_fn_decl(hasher: &mut Hasher, func: &FnDecl) {
     hash_block(hasher, &func.body);
 }
 
-fn hash_param(hasher: &mut Hasher, param: &Param) {
+fn hash_param(hasher: &mut HashState, param: &Param) {
     feed_str(hasher, &param.name);
     hash_type_expr(hasher, &param.ty);
 }
 
-fn hash_block(hasher: &mut Hasher, block: &Block) {
+fn hash_block(hasher: &mut HashState, block: &Block) {
     feed_str(hasher, &block.raw);
 }
 
-fn feed_str(hasher: &mut Hasher, value: &str) {
+fn feed_str(hasher: &mut HashState, value: &str) {
     hasher.update(value.as_bytes());
     hasher.update(&[0]);
 }
 
-fn feed_opt_str(hasher: &mut Hasher, value: Option<&str>) {
+fn feed_opt_str(hasher: &mut HashState, value: Option<&str>) {
     match value {
         Some(val) => {
             hasher.update(&[1]);
@@ -152,7 +155,7 @@ fn feed_opt_str(hasher: &mut Hasher, value: Option<&str>) {
     }
 }
 
-fn feed_u32(hasher: &mut Hasher, value: u32) {
+fn feed_u32(hasher: &mut HashState, value: u32) {
     hasher.update(&value.to_le_bytes());
 }
 
