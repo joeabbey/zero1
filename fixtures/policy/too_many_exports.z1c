@@ -1,0 +1,7 @@
+m test.exports:1.0 ctx=200 caps=[]
+t T1 = U32
+t T2 = U32
+t T3 = U32
+f f1()->Unit eff [pure] { ret Unit }
+f f2()->Unit eff [pure] { ret Unit }
+f f3()->Unit eff [pure] { ret Unit }

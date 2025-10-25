@@ -1,0 +1,2 @@
+m test.valid:1.0 ctx=100 caps=[net]
+f handler()->Unit eff [net] { ret Unit }

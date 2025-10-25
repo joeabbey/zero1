@@ -1363,11 +1363,13 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "camino",
+ "chrono",
  "clap",
  "colored",
  "hex",
  "serde",
  "serde_json",
+ "tempfile",
  "tracing",
  "tracing-subscriber",
  "z1-ast",

@@ -1,0 +1,12 @@
+[package]
+name = "z1-policy"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+z1-ast = { path = "../z1-ast" }
+z1-effects = { path = "../z1-effects" }
+z1-ctx = { path = "../z1-ctx" }
+thiserror.workspace = true
