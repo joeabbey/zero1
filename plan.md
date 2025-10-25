@@ -57,4 +57,4 @@ Zero1 (Z1) is a Rust-based toolchain plus language optimized for LLM agent workf
 5. ✅ Sketch SemHash/FormHash crate API (`z1-hash`) and wire into CLI for smoke tests.
 6. ✅ Lay down `z1-fmt` plan (CLI flags, formatting strategy, test fixtures) to prep for round-trip support (`docs/fmt-plan.md`).
 7. ✅ Implement `z1-fmt` MVP per plan (format module header + imports + symbol map) and add formatter tests.
-8. [ ] Extend formatter coverage (fn bodies/statements, CLI streaming flags) and document usage in `AGENTS.md` per fmt plan checklist. _(CLI now supports multi-path/`--files-from`; statement formatting + docs pending.)_
+8. [ ] Extend formatter coverage (fn bodies/statements, CLI streaming flags) and document usage in `AGENTS.md` per fmt plan checklist. _(CLI + docs done; statement-aware formatting still pending.)_
