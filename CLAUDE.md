@@ -2,6 +2,151 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Coordinated Development Workflow
+
+This section documents the proven workflow for managing complex, multi-milestone development with parallel agents.
+
+### Session Start Protocol
+
+1. **Review Repository State**
+   ```bash
+   git status
+   git log --oneline -10
+   cargo test --workspace 2>&1 | grep "test result:"
+   ```
+
+2. **Read Key Coordination Files**
+   - `plan.md` - Current milestone status and task breakdown
+   - `AGENTS.md` - Coding conventions and commit guidelines
+   - `CLAUDE.md` - This file for project context
+
+3. **Identify Current Position**
+   - Check which milestone (M0, M1, M2, etc.) is active
+   - Find incomplete tasks marked with `[ ]` in plan.md
+   - Look for work-in-progress commits or unstaged changes
+
+### Task Completion Workflow
+
+For each task, follow this cycle:
+
+1. **Implement** - Write code, following CLAUDE.md and AGENTS.md guidelines
+2. **Test** - Run tests: `cargo test -p <crate>` and verify all pass
+3. **Format & Lint**
+   ```bash
+   cargo fmt --all
+   cargo clippy --workspace --all-targets --all-features -- -D warnings
+   ```
+4. **Document** - Update relevant docs (crate README, PROGRESS.md if needed)
+5. **Update plan.md** - Mark task complete with brief summary
+6. **Commit**
+   ```bash
+   git add <files>
+   git commit -m "feat(scope): descriptive message"
+   ```
+7. **Push** - `git push origin main`
+
+### Parallel Development Pattern
+
+When multiple independent tasks are available (e.g., M1 has 3 separate tasks):
+
+1. **Identify Parallelizable Work**
+   - Check plan.md for tasks marked "_(Ready to start)_"
+   - Ensure tasks have no dependencies on each other
+   - Verify each task targets a different crate
+
+2. **Deploy Parallel Agents**
+   ```
+   Launch 3 task-executor agents simultaneously:
+   - Agent 1: Implement structural type checker (z1-typeck)
+   - Agent 2: Implement effect/capability checker (z1-effects)
+   - Agent 3: Implement context estimator (z1-ctx)
+   ```
+
+3. **Agent Task Specification Template**
+   For each agent, provide:
+   - Clear task description referencing plan.md and design docs
+   - Success criteria (tests must pass, clippy clean, etc.)
+   - Deliverables (implementation, tests, docs, plan.md update, commit)
+   - Key files to reference (design.md, grammar.md, etc.)
+   - Integration points with existing crates
+
+4. **Verification & Integration**
+   ```bash
+   # Pull all agent work
+   git pull origin main
+
+   # Verify workspace builds
+   cargo build --workspace
+
+   # Verify all tests pass
+   cargo test --workspace
+
+   # Check code quality
+   cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+   # Review and commit any remaining work
+   git status
+   git add <uncommitted-work>
+   git commit -m "feat: complete milestone X"
+   git push
+   ```
+
+5. **Update Coordination Artifacts**
+   - Update plan.md to mark milestone complete
+   - Update README.md if major features added
+   - Document known limitations in crate-specific PROGRESS.md files
+   - Commit documentation updates separately
+
+### Example: M1 Parallel Workflow
+
+This pattern was successfully used for M1 (Semantics & Context):
+
+```
+Session Start:
+✓ Read plan.md → Found M0 task 8 incomplete, M1 ready to start
+✓ Completed M0 task 8 (formatter MVP)
+✓ Committed and pushed formatter work
+
+Parallel Deployment:
+✓ Deployed 3 agents for M1 tasks (typeck, effects, ctx)
+✓ All agents completed independently
+✓ Each committed their work with descriptive messages
+
+Integration:
+✓ Pulled all work, verified tests (62 tests added, all passing)
+✓ Updated plan.md to mark M1 ✅ complete
+✓ Pushed final updates
+
+Results:
+- 3 new crates: z1-typeck, z1-effects, z1-ctx
+- 62 new tests, all passing
+- ~3,500 lines of code added
+- Complete in single session vs multiple sequential sessions
+```
+
+### Task Coordination Best Practices
+
+1. **Always use TodoWrite** for complex tasks to track progress
+2. **Update plan.md immediately** when tasks complete
+3. **Keep commits atomic** - one logical change per commit
+4. **Test before committing** - never commit failing tests
+5. **Document limitations** - MVP is OK if documented
+6. **Push frequently** - after each complete task
+7. **Clean git history** - descriptive messages, no WIP commits
+
+### Milestone Completion Checklist
+
+Before marking a milestone complete:
+
+- [ ] All tasks in plan.md marked `[x]`
+- [ ] All tests passing: `cargo test --workspace`
+- [ ] Clippy clean: `cargo clippy --workspace -- -D warnings`
+- [ ] Code formatted: `cargo fmt --all`
+- [ ] Documentation updated (README.md, CLAUDE.md if needed)
+- [ ] Git history clean (no uncommitted changes)
+- [ ] All work pushed to remote
+- [ ] plan.md updated with completion notes
+
 ## Project Overview
 
 Zero1 (Z1) is a Rust-based toolchain and language designed for LLM agent workflows. It features dual compact/relaxed syntax, strict capability and context budgets, deterministic hashing for provenance, and code generation to TypeScript/WASM targets.
