@@ -1,3 +1,5 @@
+mod commands;
+
 use anyhow::Result;
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use std::fs;
@@ -28,6 +30,12 @@ enum Commands {
     /// Estimate context token usage for a cell.
     #[command(alias = "z1ctx")]
     Ctx(CtxArgs),
+    /// Provenance chain management and verification.
+    #[command(alias = "z1prov", subcommand)]
+    Prov(commands::prov::ProvCommand),
+    /// Run Z1 test files (.z1t).
+    #[command(alias = "z1test")]
+    Test(TestArgs),
 }
 
 #[derive(Debug, Args)]
@@ -100,6 +108,18 @@ struct CtxArgs {
     verbose: bool,
 }
 
+#[derive(Debug, Args)]
+struct TestArgs {
+    /// Paths to `.z1t` test files.
+    paths: Vec<String>,
+    /// Filter tests by tags (comma-separated).
+    #[arg(long)]
+    tags: Option<String>,
+    /// Show verbose output.
+    #[arg(long, short = 'v')]
+    verbose: bool,
+}
+
 fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
     let cli = Cli::parse();
@@ -111,7 +131,78 @@ fn main() -> Result<()> {
         }
         Commands::Hash { path } => handle_hash(path),
         Commands::Ctx(args) => handle_ctx(args),
+        Commands::Prov(cmd) => handle_prov(cmd),
+        Commands::Test(args) => handle_test(args),
     }
+}
+
+fn handle_prov(cmd: commands::prov::ProvCommand) -> Result<()> {
+    use commands::prov::ProvCommand;
+    match cmd {
+        ProvCommand::Log { file } => commands::prov::cmd_log(file),
+        ProvCommand::Verify { file, keys } => commands::prov::cmd_verify(file, keys),
+        ProvCommand::Keygen { output } => commands::prov::cmd_keygen(output),
+    }
+}
+
+fn handle_test(args: TestArgs) -> Result<()> {
+    if args.paths.is_empty() {
+        anyhow::bail!("provide at least one .z1t test file");
+    }
+
+    // Parse tag filters if provided
+    let tags_include = if let Some(tags) = &args.tags {
+        tags.split(',').map(|s| s.trim().to_string()).collect()
+    } else {
+        vec![]
+    };
+
+    let config = z1_test::TestConfig {
+        tags_include,
+        ..Default::default()
+    };
+
+    let mut runner = z1_test::TestRunner::new(config);
+    let mut total_passed = 0;
+    let mut total_failed = 0;
+    let mut total_skipped = 0;
+    let mut all_failures = Vec::new();
+
+    for path in &args.paths {
+        println!("Running tests from: {}", path);
+        let source = fs::read_to_string(path)?;
+        let file = z1_test::parse_test_file(&source)
+            .map_err(|e| anyhow::anyhow!("Failed to parse {}: {}", path, e))?;
+
+        let results = runner.run_file(&file);
+
+        total_passed += results.passed;
+        total_failed += results.failed;
+        total_skipped += results.skipped;
+
+        if args.verbose {
+            for failure in &results.failures {
+                println!("  FAILED: {} - {}", failure.name, failure.error);
+            }
+        }
+
+        all_failures.extend(results.failures);
+    }
+
+    println!("\nTest Results:");
+    println!("  Passed:  {}", total_passed);
+    println!("  Failed:  {}", total_failed);
+    println!("  Skipped: {}", total_skipped);
+
+    if !all_failures.is_empty() {
+        println!("\nFailures:");
+        for failure in all_failures {
+            println!("  - {}: {}", failure.name, failure.error);
+        }
+        std::process::exit(1);
+    }
+
+    Ok(())
 }
 
 fn handle_fmt(args: FmtArgs) -> Result<()> {

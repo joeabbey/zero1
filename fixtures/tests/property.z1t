@@ -1,0 +1,12 @@
+config { seed: 42 }
+
+prop "addition is commutative"
+for_all (a: U32, b: U32) runs 100 seed 42 {
+  assert a + b == b + a;
+}
+
+prop "string concatenation length"
+for_all (s1: Str, s2: Str) runs 50 {
+  let combined = s1 + s2;
+  assert combined.len() == s1.len() + s2.len();
+}

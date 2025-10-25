@@ -1,0 +1,18 @@
+[package]
+name = "z1-test"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+z1-ast = { path = "../z1-ast" }
+z1-lex = { path = "../z1-lex" }
+z1-parse = { path = "../z1-parse" }
+logos.workspace = true
+thiserror.workspace = true
+serde = { workspace = true }
+serde_json = { workspace = true }
+proptest = "1.4"
+
+[dev-dependencies]

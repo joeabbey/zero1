@@ -1,0 +1,14 @@
+config { timeout_ms: 3000 }
+
+spec "addition works" {
+  assert 1 + 1 == 2;
+}
+
+spec "equality check" {
+  let x = 42;
+  assert_eq(x, 42);
+}
+
+spec "inequality check" {
+  assert_ne(1, 2);
+}

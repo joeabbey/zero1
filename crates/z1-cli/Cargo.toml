@@ -25,3 +25,10 @@ z1-hash = { path = "../z1-hash" }
 z1-prov = { path = "../z1-prov" }
 z1-codegen-ts = { path = "../z1-codegen-ts" }
 z1-codegen-wasm = { path = "../z1-codegen-wasm" }
+z1-test = { path = "../z1-test" }
+colored.workspace = true
+hex.workspace = true
+
+[dev-dependencies]
+tempfile = "3.8"
+chrono.workspace = true

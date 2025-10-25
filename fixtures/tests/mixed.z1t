@@ -1,0 +1,21 @@
+config { timeout_ms: 5000 }
+
+fixture base: U32 = { 10 };
+
+spec "unit test with fixture" with { tags: ["unit"] } {
+  let result = base + 5;
+  assert_eq(result, 15);
+}
+
+spec "tagged integration test" with { tags: ["integration"] } {
+  assert true;
+}
+
+spec "skipped test" with { skip: true } {
+  assert false;  // This should not run
+}
+
+prop "property test in mixed file"
+for_all (x: U32) runs 50 seed 100 {
+  assert x == x;  // Identity property
+}
