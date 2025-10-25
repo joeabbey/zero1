@@ -20,10 +20,10 @@ Zero1 (Z1) is a Rust-based toolchain plus language optimized for LLM agent workf
 - [x] Implement canonical SemHash/FormHash functions and golden tests. _(Hash crate + CLI `hash` subcommand live; expand coverage as AST grows.)_
 - [x] Ship `z1fmt` MVP supporting compact↔relaxed round-trip on sample cells. _(Formatter library + CLI wired; covers module header, symbol maps, imports, types, and fn signatures per `docs/fmt-plan.md`.)_
 
-### M1 – Semantics & Context (Week 1‑2)
-- [ ] Implement structural type checker with basic generics; add fixtures under `tests/typeck/`. _(Ready to start)_
-- [ ] Add effect/capability checker that enforces module budgets/caps. _(Ready to start)_
-- [x] Build context estimator + SDict hooks (stubbed) so we can reject over-budget cells. _(Complete: `z1-ctx` crate + CLI integration)_
+### M1 – Semantics & Context (Week 1‑2) ✅
+- [x] Implement structural type checker with basic generics; add fixtures under `tests/typeck/`. _(Complete: `z1-typeck` crate with 24 passing tests; structural equality, path resolution, import handling)_
+- [x] Add effect/capability checker that enforces module budgets/caps. _(Complete: `z1-effects` crate with 24 passing tests; effect subtyping, capability enforcement)_
+- [x] Build context estimator + SDict hooks (stubbed) so we can reject over-budget cells. _(Complete: `z1-ctx` crate + CLI integration with 14 passing tests)_
 - [ ] **[Future]** Extend `z1fmt` to expand identifiers in function bodies (requires statement AST or text scanner).
 
 ### M2 – Provenance, Policy, Testing (Week 2‑3)
