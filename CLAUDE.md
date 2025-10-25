@@ -30,20 +30,81 @@ This section documents the proven workflow for managing complex, multi-milestone
 For each task, follow this cycle:
 
 1. **Implement** - Write code, following CLAUDE.md and AGENTS.md guidelines
-2. **Test** - Run tests: `cargo test -p <crate>` and verify all pass
-3. **Format & Lint**
+
+2. **Write Meaningful Tests** - This is critical and non-negotiable
+
+   **Test-Driven Approach:**
+   - Write tests **as you implement**, not after
+   - Each test must exercise actual functionality
+   - Tests should fail if the feature is broken
+   - Aim for multiple test cases: happy path, edge cases, error conditions
+
+   **Test Quality Checklist:**
+   - [ ] Does this test actually call the implemented function/method?
+   - [ ] Does this test assert meaningful outcomes (not just "doesn't panic")?
+   - [ ] Would this test catch regressions if I broke the feature?
+   - [ ] Are error cases tested, not just success cases?
+   - [ ] Do integration tests verify real-world usage scenarios?
+
+   **Examples of Good Tests:**
+   ```rust
+   #[test]
+   fn type_checker_rejects_mismatched_record_fields() {
+       let module = parse("t Foo = { x: U32, y: Str }");
+       let result = check_module(&module);
+       assert!(matches!(result, Err(TypeError::FieldMismatch { .. })));
+   }
+   ```
+
+   **Examples of Bad Tests (DO NOT DO THIS):**
+   ```rust
+   #[test]
+   fn test_passes() {
+       assert!(true); // Meaningless
+   }
+
+   #[test]
+   fn can_create_checker() {
+       let checker = TypeChecker::new(); // Doesn't test anything
+   }
+   ```
+
+   **Remove Tests That:**
+   - Don't exercise any functionality
+   - Are duplicates of other tests
+   - Test implementation details that changed
+   - Pass even when the feature is broken
+
+3. **Verify Tests** - Run tests and ensure they're meaningful
+   ```bash
+   # Run tests for the crate you're working on
+   cargo test -p <crate>
+
+   # Verify test output shows what's being tested
+   cargo test -p <crate> -- --nocapture
+
+   # Check test coverage (all major code paths should be tested)
+   # If a test count seems low, add more tests
+   ```
+
+4. **Format & Lint**
    ```bash
    cargo fmt --all
    cargo clippy --workspace --all-targets --all-features -- -D warnings
    ```
-4. **Document** - Update relevant docs (crate README, PROGRESS.md if needed)
-5. **Update plan.md** - Mark task complete with brief summary
-6. **Commit**
+
+5. **Document** - Update relevant docs (crate README, PROGRESS.md if needed)
+
+6. **Update plan.md** - Mark task complete with brief summary including test count
+   - Example: "_(Complete: `z1-typeck` crate with 24 passing tests)_"
+
+7. **Commit**
    ```bash
    git add <files>
    git commit -m "feat(scope): descriptive message"
    ```
-7. **Push** - `git push origin main`
+
+8. **Push** - `git push origin main`
 
 ### Parallel Development Pattern
 
@@ -65,10 +126,17 @@ When multiple independent tasks are available (e.g., M1 has 3 separate tasks):
 3. **Agent Task Specification Template**
    For each agent, provide:
    - Clear task description referencing plan.md and design docs
+   - **Explicit testing requirements** (number and types of tests expected)
    - Success criteria (tests must pass, clippy clean, etc.)
-   - Deliverables (implementation, tests, docs, plan.md update, commit)
+   - Deliverables (implementation, **meaningful tests**, docs, plan.md update, commit)
    - Key files to reference (design.md, grammar.md, etc.)
    - Integration points with existing crates
+
+   **Always Emphasize in Agent Prompts:**
+   - "Write comprehensive tests that actually exercise the feature"
+   - "Include unit tests for components and integration tests for real usage"
+   - "Tests must fail if the feature is broken"
+   - Specify expected test count (e.g., "minimum 15 tests covering all major cases")
 
 4. **Verification & Integration**
    ```bash
@@ -127,25 +195,89 @@ Results:
 ### Task Coordination Best Practices
 
 1. **Always use TodoWrite** for complex tasks to track progress
-2. **Update plan.md immediately** when tasks complete
-3. **Keep commits atomic** - one logical change per commit
-4. **Test before committing** - never commit failing tests
-5. **Document limitations** - MVP is OK if documented
-6. **Push frequently** - after each complete task
-7. **Clean git history** - descriptive messages, no WIP commits
+2. **Write tests as you code** - not after, and make them meaningful
+3. **Update plan.md immediately** when tasks complete (include test count)
+4. **Keep commits atomic** - one logical change per commit
+5. **Test before committing** - never commit failing tests or empty tests
+6. **Review test quality** - would these tests catch real bugs?
+7. **Remove obsolete tests** - if a test no longer serves a purpose, delete it
+8. **Document limitations** - MVP is OK if documented
+9. **Push frequently** - after each complete task
+10. **Clean git history** - descriptive messages, no WIP commits
+
+### Test Quality Guidelines
+
+**Red Flags (Fix Immediately):**
+- Tests that don't call any of your new code
+- Tests with no assertions
+- Tests that only check types compile
+- Duplicate tests with different names
+- Tests that pass even if you comment out the feature code
+
+**Green Flags (Good Tests):**
+- Each test has a clear purpose stated in its name
+- Tests verify behavior, not implementation details
+- Error cases are tested (not just happy paths)
+- Integration tests show real-world usage
+- Running tests with `--nocapture` shows meaningful output
+
+**Test Maintenance:**
+- When refactoring, update tests to match new design
+- When features change, update or remove obsolete tests
+- When you find a bug, add a test that would have caught it
+- Keep test code clean and DRY (use test helpers)
 
 ### Milestone Completion Checklist
 
 Before marking a milestone complete:
 
-- [ ] All tasks in plan.md marked `[x]`
+- [ ] All tasks in plan.md marked `[x]` with test counts
 - [ ] All tests passing: `cargo test --workspace`
+- [ ] **Tests are meaningful** - review each test file to verify quality
+- [ ] **No empty/dummy tests** - all tests exercise real functionality
+- [ ] **Test count is reasonable** - complex features should have many tests
 - [ ] Clippy clean: `cargo clippy --workspace -- -D warnings`
 - [ ] Code formatted: `cargo fmt --all`
 - [ ] Documentation updated (README.md, CLAUDE.md if needed)
 - [ ] Git history clean (no uncommitted changes)
 - [ ] All work pushed to remote
 - [ ] plan.md updated with completion notes
+
+### Common Testing Patterns in Zero1
+
+**Type Checking Tests:**
+```rust
+// Good: Tests actual type checking logic
+#[test]
+fn rejects_record_type_mismatch() {
+    let env = TypeEnv::new();
+    let result = check_type(&parse_type("{ x: U32 }"), &parse_type("{ x: Str }"), &env);
+    assert!(matches!(result, Err(TypeError::Mismatch { .. })));
+}
+```
+
+**Effect Checking Tests:**
+```rust
+// Good: Tests capability enforcement
+#[test]
+fn rejects_net_effect_without_capability() {
+    let module = parse_module("m test caps=[] f foo() eff [net] { }");
+    let result = check_module(&module);
+    assert!(matches!(result, Err(EffectError::MissingCapability { .. })));
+}
+```
+
+**Context Estimation Tests:**
+```rust
+// Good: Tests real estimation with verification
+#[test]
+fn estimates_tokens_within_budget() {
+    let module = parse_module("m test ctx=100 f foo() { ret 42; }");
+    let estimate = estimate_cell(&module).unwrap();
+    assert!(estimate.total_tokens <= 100);
+    assert!(estimate.total_tokens > 0); // Not just zero
+}
+```
 
 ## Project Overview
 
