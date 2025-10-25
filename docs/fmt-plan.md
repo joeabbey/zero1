@@ -41,6 +41,7 @@ Add new fixtures under `fixtures/fmt/`:
 - `http_server.compact.z1c` (matches current sample).
 - `http_server.relaxed.z1r` (expected relaxed output).
 - `symbol_map_override.z1c` (exercises `#sym` ordering and reflow).
+- `statements.compact.z1c` / `.relaxed.z1r` covering `return`, `let`, `if/else`, nested blocks.
 
 ## 5. Rollout Checklist
 1. Implement `crates/z1-fmt` with the API `pub fn format(module: &Module, mode: Mode, options: &FmtOptions) -> Result<String, Error>`.

@@ -43,3 +43,18 @@ fn round_trip_preserves_semantics() {
 
     assert_eq!(original_hash, final_hash);
 }
+
+#[test]
+fn formats_statements_fixture() {
+    let source = read_fixture("fixtures/fmt/statements.compact.z1c");
+    let module = parse_module(&source).expect("parse");
+    let relaxed = format_module(&module, Mode::Relaxed, &FmtOptions::default()).expect("fmt");
+    let expected_relaxed = read_fixture("fixtures/fmt/statements.relaxed.z1r");
+    assert_eq!(relaxed, expected_relaxed);
+
+    let reparsed = parse_module(&relaxed).expect("parse relaxed");
+    let compact =
+        format_module(&reparsed, Mode::Compact, &FmtOptions::default()).expect("fmt compact");
+    let expected_compact = read_fixture("fixtures/fmt/statements.compact.z1c");
+    assert_eq!(compact, expected_compact);
+}

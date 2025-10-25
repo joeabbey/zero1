@@ -21,10 +21,10 @@ Zero1 (Z1) is a Rust-based toolchain plus language optimized for LLM agent workf
 - [x] Ship `z1fmt` MVP supporting compact↔relaxed round-trip on sample cells. _(Formatter library + CLI wired; covers module header, symbol maps, imports, types, and fn signatures per `docs/fmt-plan.md`.)_
 
 ### M1 – Semantics & Context (Week 1‑2)
-- [ ] Implement structural type checker with basic generics; add fixtures under `tests/typeck/`.
-- [ ] Add effect/capability checker that enforces module budgets/caps.
-- [ ] Build context estimator + SDict hooks (stubbed) so we can reject over-budget cells.
-- [ ] Extend `z1fmt` to preserve formatting-only hashes.
+- [ ] Implement structural type checker with basic generics; add fixtures under `tests/typeck/`. _(Ready to start)_
+- [ ] Add effect/capability checker that enforces module budgets/caps. _(Ready to start)_
+- [ ] Build context estimator + SDict hooks (stubbed) so we can reject over-budget cells. _(Ready to start)_
+- [ ] **[Future]** Extend `z1fmt` to expand identifiers in function bodies (requires statement AST or text scanner).
 
 ### M2 – Provenance, Policy, Testing (Week 2‑3)
 - [ ] Implement append-only provenance store + Merkle root calculation.
@@ -57,4 +57,4 @@ Zero1 (Z1) is a Rust-based toolchain plus language optimized for LLM agent workf
 5. ✅ Sketch SemHash/FormHash crate API (`z1-hash`) and wire into CLI for smoke tests.
 6. ✅ Lay down `z1-fmt` plan (CLI flags, formatting strategy, test fixtures) to prep for round-trip support (`docs/fmt-plan.md`).
 7. ✅ Implement `z1-fmt` MVP per plan (format module header + imports + symbol map) and add formatter tests.
-8. [ ] Extend formatter coverage (fn bodies/statements, CLI streaming flags) and document usage in `AGENTS.md` per fmt plan checklist. _(CLI + docs done; statement-aware formatting still pending.)_
+8. [x] Extend formatter coverage (fn bodies/statements, CLI streaming flags) and document usage in `AGENTS.md` per fmt plan checklist. _(MVP complete: basic block formatting with indentation working; known limitations documented in `crates/z1-fmt/PROGRESS.md`; identifier expansion in function bodies remains future work.)_

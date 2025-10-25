@@ -19,7 +19,7 @@ pub enum SymMapStyle {
 
 impl Default for SymMapStyle {
     fn default() -> Self {
-        SymMapStyle::Respect
+        Self::Respect
     }
 }
 
@@ -268,18 +268,7 @@ impl<'a> Formatter<'a> {
             self.buf.push_str(&decl.effects.join(", "));
             self.buf.push(']');
         }
-        match self.mode {
-            Mode::Compact => {
-                self.buf.push(' ');
-                self.buf.push_str(&decl.body.raw);
-                self.buf.push('\n');
-            }
-            Mode::Relaxed => {
-                self.buf.push('\n');
-                self.buf.push_str(&decl.body.raw);
-                self.buf.push('\n');
-            }
-        }
+        write_block(self, &decl.body.raw);
     }
 
     fn format_param(&self, param: &Param) -> String {
@@ -347,21 +336,25 @@ impl<'a> Formatter<'a> {
 
 struct SymbolTable {
     long_to_short: HashMap<String, String>,
+    short_to_long: HashMap<String, String>,
     style: SymMapStyle,
 }
 
 impl SymbolTable {
     fn new(module: &Module, style: SymMapStyle) -> Self {
         let mut long_to_short = HashMap::new();
+        let mut short_to_long = HashMap::new();
         for item in &module.items {
             if let Item::Symbol(sym) = item {
                 for pair in &sym.pairs {
                     long_to_short.insert(pair.long.clone(), pair.short.clone());
+                    short_to_long.insert(pair.short.clone(), pair.long.clone());
                 }
             }
         }
         Self {
             long_to_short,
+            short_to_long,
             style,
         }
     }
@@ -373,7 +366,11 @@ impl SymbolTable {
                 .get(ident)
                 .cloned()
                 .unwrap_or_else(|| ident.to_string()),
-            Mode::Relaxed => ident.to_string(),
+            Mode::Relaxed => self
+                .short_to_long
+                .get(ident)
+                .cloned()
+                .unwrap_or_else(|| ident.to_string()),
         }
     }
 
@@ -390,4 +387,53 @@ impl SymbolTable {
             }
         }
     }
+}
+fn write_block(formatter: &mut Formatter<'_>, raw: &str) {
+    if matches!(formatter.mode, Mode::Compact) {
+        formatter.buf.push(' ');
+        formatter.buf.push_str(raw);
+        formatter.buf.push('\n');
+        return;
+    }
+
+    // For relaxed mode, reformat the block with proper indentation
+    formatter.buf.push('\n');
+    let trimmed = raw.trim();
+
+    // Remove outer braces if present
+    let content = if trimmed.starts_with('{') && trimmed.ends_with('}') {
+        &trimmed[1..trimmed.len() - 1]
+    } else {
+        trimmed
+    };
+
+    formatter.buf.push_str("{\n");
+
+    // Process each line, tracking brace depth for proper indentation
+    let mut indent_level: usize = 1; // Start at 1 because we're inside the function body
+    for line in content.lines() {
+        let trimmed_line = line.trim();
+        if trimmed_line.is_empty() {
+            continue;
+        }
+
+        // Decrease indent before printing if line starts with }
+        if trimmed_line.starts_with('}') {
+            indent_level = indent_level.saturating_sub(1);
+        }
+
+        // Add indentation
+        for _ in 0..indent_level {
+            formatter.buf.push_str("  ");
+        }
+        formatter.buf.push_str(trimmed_line);
+        formatter.buf.push('\n');
+
+        // Increase indent after printing if line ends with {
+        if trimmed_line.ends_with('{') {
+            indent_level += 1;
+        }
+    }
+
+    formatter.buf.push_str("}\n");
 }

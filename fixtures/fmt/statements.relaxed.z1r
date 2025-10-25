@@ -1,0 +1,20 @@
+module demo.statements : 0.1
+  ctx = 64
+
+// SymbolMap: { handle ↔ h }
+#sym { handle: h }
+
+use "std/http" as H only [listen, Req, Res]
+
+type Health = { ok: Bool, msg: Str }
+
+fn handle(req: Unit) -> Unit
+  eff [pure]
+{
+  let x: U16 = 1;
+  if x {
+    ret ();
+  } else {
+    ret ();
+  }
+}

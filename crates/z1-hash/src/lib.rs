@@ -28,14 +28,14 @@ fn hash_module(module: &Module, include_symbol_map: bool) -> String {
     feed_opt_str(&mut hasher, module.version.as_deref());
     match module.ctx_budget {
         Some(value) => {
-            hasher.update(&[1]);
+            hasher.update([1]);
             feed_u32(&mut hasher, value);
         }
         None => {
-            hasher.update(&[0]);
+            hasher.update([0]);
         }
     }
-    hasher.update(&(module.caps.len() as u32).to_le_bytes());
+    hasher.update((module.caps.len() as u32).to_le_bytes());
     for cap in &module.caps {
         feed_str(&mut hasher, cap);
     }
@@ -43,7 +43,7 @@ fn hash_module(module: &Module, include_symbol_map: bool) -> String {
         hash_item(&mut hasher, item, include_symbol_map);
     }
     let digest = hasher.finalize();
-    format!("{:x}", digest)
+    format!("{digest:x}")
 }
 
 fn hash_item(hasher: &mut HashState, item: &Item, include_symbol_map: bool) {
@@ -72,14 +72,14 @@ fn hash_item(hasher: &mut HashState, item: &Item, include_symbol_map: bool) {
 fn hash_import(hasher: &mut HashState, import: &Import) {
     feed_str(hasher, &import.path);
     feed_opt_str(hasher, import.alias.as_deref());
-    hasher.update(&(import.only.len() as u32).to_le_bytes());
+    hasher.update((import.only.len() as u32).to_le_bytes());
     for ident in &import.only {
         feed_str(hasher, ident);
     }
 }
 
 fn hash_symbol_map(hasher: &mut HashState, symbols: &SymbolMap) {
-    hasher.update(&(symbols.pairs.len() as u32).to_le_bytes());
+    hasher.update((symbols.pairs.len() as u32).to_le_bytes());
     for pair in &symbols.pairs {
         feed_str(hasher, &pair.long);
         feed_str(hasher, &pair.short);
@@ -95,14 +95,14 @@ fn hash_type_expr(hasher: &mut HashState, expr: &TypeExpr) {
     match expr {
         TypeExpr::Path(segments) => {
             feed_str(hasher, "path");
-            hasher.update(&(segments.len() as u32).to_le_bytes());
+            hasher.update((segments.len() as u32).to_le_bytes());
             for segment in segments {
                 feed_str(hasher, segment);
             }
         }
         TypeExpr::Record(fields) => {
             feed_str(hasher, "record");
-            hasher.update(&(fields.len() as u32).to_le_bytes());
+            hasher.update((fields.len() as u32).to_le_bytes());
             for field in fields {
                 hash_record_field(hasher, field);
             }
@@ -117,12 +117,12 @@ fn hash_record_field(hasher: &mut HashState, field: &RecordField) {
 
 fn hash_fn_decl(hasher: &mut HashState, func: &FnDecl) {
     feed_str(hasher, &func.name);
-    hasher.update(&(func.params.len() as u32).to_le_bytes());
+    hasher.update((func.params.len() as u32).to_le_bytes());
     for param in &func.params {
         hash_param(hasher, param);
     }
     hash_type_expr(hasher, &func.ret);
-    hasher.update(&(func.effects.len() as u32).to_le_bytes());
+    hasher.update((func.effects.len() as u32).to_le_bytes());
     for eff in &func.effects {
         feed_str(hasher, eff);
     }
@@ -140,23 +140,23 @@ fn hash_block(hasher: &mut HashState, block: &Block) {
 
 fn feed_str(hasher: &mut HashState, value: &str) {
     hasher.update(value.as_bytes());
-    hasher.update(&[0]);
+    hasher.update([0]);
 }
 
 fn feed_opt_str(hasher: &mut HashState, value: Option<&str>) {
     match value {
         Some(val) => {
-            hasher.update(&[1]);
+            hasher.update([1]);
             feed_str(hasher, val);
         }
         None => {
-            hasher.update(&[0]);
+            hasher.update([0]);
         }
     }
 }
 
 fn feed_u32(hasher: &mut HashState, value: u32) {
-    hasher.update(&value.to_le_bytes());
+    hasher.update(value.to_le_bytes());
 }
 
 #[cfg(test)]

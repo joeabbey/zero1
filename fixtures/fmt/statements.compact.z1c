@@ -1,0 +1,16 @@
+m demo.statements:0.1 ctx=64
+
+#sym { handle: h }
+
+u "std/http" as H only [listen, Req, Res]
+
+t Health = { ok: Bool, msg: Str }
+
+f h(req: Unit)->Unit eff [pure] {
+  let x: U16 = 1;
+  if x {
+    ret ();
+  } else {
+    ret ();
+  }
+}
