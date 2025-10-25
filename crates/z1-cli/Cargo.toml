@@ -18,6 +18,7 @@ z1-ast = { path = "../z1-ast" }
 z1-lex = { path = "../z1-lex" }
 z1-parse = { path = "../z1-parse" }
 z1-fmt = { path = "../z1-fmt" }
+z1-ctx = { path = "../z1-ctx" }
 z1-typeck = { path = "../z1-typeck" }
 z1-effects = { path = "../z1-effects" }
 z1-hash = { path = "../z1-hash" }

@@ -668,6 +668,7 @@ dependencies = [
  "z1-ast",
  "z1-codegen-ts",
  "z1-codegen-wasm",
+ "z1-ctx",
  "z1-effects",
  "z1-fmt",
  "z1-hash",
@@ -696,12 +697,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "z1-ctx"
+version = "0.1.0"
+dependencies = [
+ "thiserror",
+ "z1-ast",
+ "z1-fmt",
+ "z1-parse",
+]
+
+[[package]]
 name = "z1-effects"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "serde",
  "thiserror",
+ "z1-ast",
 ]
 
 [[package]]
@@ -761,4 +773,5 @@ dependencies = [
  "anyhow",
  "serde",
  "thiserror",
+ "z1-ast",
 ]

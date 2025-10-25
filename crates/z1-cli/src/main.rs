@@ -25,6 +25,9 @@ enum Commands {
         /// Path to the source cell.
         path: String,
     },
+    /// Estimate context token usage for a cell.
+    #[command(alias = "z1ctx")]
+    Ctx(CtxArgs),
 }
 
 #[derive(Debug, Args)]
@@ -82,6 +85,21 @@ impl From<FmtSymmapArg> for z1_fmt::SymMapStyle {
     }
 }
 
+#[derive(Debug, Args)]
+struct CtxArgs {
+    /// Path to the source cell to estimate.
+    path: String,
+    /// Custom characters-per-token ratio (default: 3.8).
+    #[arg(long)]
+    chars_per_token: Option<f64>,
+    /// Skip budget enforcement (only show estimates).
+    #[arg(long)]
+    no_enforce: bool,
+    /// Show detailed per-function breakdown.
+    #[arg(long, short = 'v')]
+    verbose: bool,
+}
+
 fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
     let cli = Cli::parse();
@@ -92,6 +110,7 @@ fn main() -> Result<()> {
             Ok(())
         }
         Commands::Hash { path } => handle_hash(path),
+        Commands::Ctx(args) => handle_ctx(args),
     }
 }
 
@@ -210,4 +229,40 @@ fn format_file(path: &str, args: &FmtArgs) -> Result<bool> {
         fs::write(path, formatted)?;
     }
     Ok(changed)
+}
+
+fn handle_ctx(args: CtxArgs) -> Result<()> {
+    let source = fs::read_to_string(&args.path)?;
+    let module = z1_parse::parse_module(&source)?;
+
+    let config = z1_ctx::EstimateConfig {
+        chars_per_token: args
+            .chars_per_token
+            .unwrap_or(z1_ctx::DEFAULT_CHARS_PER_TOKEN),
+        enforce_budget: !args.no_enforce,
+    };
+
+    match z1_ctx::estimate_cell_with_config(&module, &config) {
+        Ok(estimate) => {
+            if args.verbose {
+                println!("{estimate}");
+            } else {
+                println!("Estimated tokens: {}", estimate.total_tokens);
+                if let Some(budget) = estimate.budget {
+                    let percentage = (estimate.total_tokens as f64 / budget as f64) * 100.0;
+                    println!("Budget: {budget} ({percentage:.1}% used)");
+                    if estimate.total_tokens <= budget {
+                        println!("Status: OK (within budget)");
+                    } else {
+                        println!("Status: EXCEEDS BUDGET");
+                    }
+                }
+            }
+            Ok(())
+        }
+        Err(e) => {
+            eprintln!("Context estimation failed: {e}");
+            std::process::exit(1);
+        }
+    }
 }

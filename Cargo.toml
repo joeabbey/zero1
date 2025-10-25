@@ -4,6 +4,7 @@ members = [
   "crates/z1-lex",
   "crates/z1-parse",
   "crates/z1-fmt",
+  "crates/z1-ctx",
   "crates/z1-typeck",
   "crates/z1-effects",
   "crates/z1-hash",

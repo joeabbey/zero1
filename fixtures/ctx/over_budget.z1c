@@ -1,0 +1,6 @@
+m test.overbudget:1.0 ctx=10
+u "std/core" as C only [Unit, String, Bool]
+t ComplexType = { field1: String, field2: Bool, field3: C.Unit }
+f processData(input: String)->C.Unit eff [pure] { ret C.Unit }
+f validateInput(data: String)->Bool eff [pure] { ret Bool }
+f transformData(raw: String)->ComplexType eff [pure] { ret ComplexType{field1:"a",field2:Bool,field3:C.Unit} }

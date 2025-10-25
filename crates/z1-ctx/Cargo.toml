@@ -1,0 +1,15 @@
+[package]
+name = "z1-ctx"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+thiserror.workspace = true
+z1-ast = { path = "../z1-ast" }
+z1-fmt = { path = "../z1-fmt" }
+
+[dev-dependencies]
+z1-parse = { path = "../z1-parse" }

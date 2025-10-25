@@ -23,7 +23,7 @@ Zero1 (Z1) is a Rust-based toolchain plus language optimized for LLM agent workf
 ### M1 – Semantics & Context (Week 1‑2)
 - [ ] Implement structural type checker with basic generics; add fixtures under `tests/typeck/`. _(Ready to start)_
 - [ ] Add effect/capability checker that enforces module budgets/caps. _(Ready to start)_
-- [ ] Build context estimator + SDict hooks (stubbed) so we can reject over-budget cells. _(Ready to start)_
+- [x] Build context estimator + SDict hooks (stubbed) so we can reject over-budget cells. _(Complete: `z1-ctx` crate + CLI integration)_
 - [ ] **[Future]** Extend `z1fmt` to expand identifiers in function bodies (requires statement AST or text scanner).
 
 ### M2 – Provenance, Policy, Testing (Week 2‑3)
