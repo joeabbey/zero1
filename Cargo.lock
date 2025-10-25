@@ -708,9 +708,10 @@ dependencies = [
 name = "z1-fmt"
 version = "0.1.0"
 dependencies = [
- "anyhow",
- "serde",
  "thiserror",
+ "z1-ast",
+ "z1-hash",
+ "z1-parse",
 ]
 
 [[package]]

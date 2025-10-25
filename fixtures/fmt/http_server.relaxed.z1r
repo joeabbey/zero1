@@ -1,0 +1,22 @@
+module http.server : 1.0
+  ctx = 128
+  caps = [net]
+
+// SymbolMap: { handler ↔ h, serve ↔ sv }
+#sym { handler: h, serve: sv }
+
+use "std/http" as H only [listen, Req, Res]
+
+type Health = { ok: Bool, msg: Str }
+
+fn h(q: H.Req) -> H.Res
+  eff [pure]
+{
+  ret H.Res{ status:200, body:"ok" };
+}
+
+fn sv(p: U16) -> Unit
+  eff [net]
+{
+  H.listen(p, h);
+}

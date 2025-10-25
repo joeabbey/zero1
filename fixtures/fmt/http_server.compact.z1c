@@ -1,0 +1,14 @@
+m http.server:1.0 ctx=128 caps=[net]
+#sym { handler: h, serve: sv }
+
+u "std/http" as H only [listen, Req, Res]
+
+t Health = { ok: Bool, msg: Str }
+
+f h(q: H.Req)->H.Res eff [pure] {
+  ret H.Res{ status:200, body:"ok" };
+}
+
+f sv(p: U16)->Unit eff [net] {
+  H.listen(p, h);
+}

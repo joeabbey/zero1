@@ -18,7 +18,7 @@ Zero1 (Z1) is a Rust-based toolchain plus language optimized for LLM agent workf
 - [x] Implement lexer/token enums with dual keyword support; add snapshot tests covering compact vs relaxed samples.
 - [x] Build parser + AST (include `SymbolMap`); block semantic fields per design. _(Symbol maps, type/fn placeholders, and block capture now parsed; stmt-level AST still TODO.)_
 - [x] Implement canonical SemHash/FormHash functions and golden tests. _(Hash crate + CLI `hash` subcommand live; expand coverage as AST grows.)_
-- [ ] Ship `z1fmt` MVP supporting compact↔relaxed round-trip on sample cells. _(See `docs/fmt-plan.md` for formatter requirements.)_
+- [x] Ship `z1fmt` MVP supporting compact↔relaxed round-trip on sample cells. _(Formatter library + CLI wired; covers module header, symbol maps, imports, types, and fn signatures per `docs/fmt-plan.md`.)_
 
 ### M1 – Semantics & Context (Week 1‑2)
 - [ ] Implement structural type checker with basic generics; add fixtures under `tests/typeck/`.
@@ -56,4 +56,5 @@ Zero1 (Z1) is a Rust-based toolchain plus language optimized for LLM agent workf
 4. ✅ Extend AST + parser with SymbolMap, type/fn decl placeholders, and richer tests.
 5. ✅ Sketch SemHash/FormHash crate API (`z1-hash`) and wire into CLI for smoke tests.
 6. ✅ Lay down `z1-fmt` plan (CLI flags, formatting strategy, test fixtures) to prep for round-trip support (`docs/fmt-plan.md`).
-7. [ ] Implement `z1-fmt` MVP per plan (format module header + imports + symbol map) and add formatter tests.
+7. ✅ Implement `z1-fmt` MVP per plan (format module header + imports + symbol map) and add formatter tests.
+8. [ ] Extend formatter coverage (fn bodies/statements, CLI streaming flags) and document usage in `AGENTS.md` per fmt plan checklist.

@@ -7,6 +7,9 @@ rust-version.workspace = true
 publish = false
 
 [dependencies]
-anyhow.workspace = true
-serde.workspace = true
 thiserror.workspace = true
+z1-ast = { path = "../z1-ast" }
+
+[dev-dependencies]
+z1-parse = { path = "../z1-parse" }
+z1-hash = { path = "../z1-hash" }
