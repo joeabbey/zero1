@@ -467,6 +467,10 @@ export function add(x: number, y: number): number {
 
 ### WebAssembly Output
 
+Zero1 supports two WebAssembly output formats:
+
+#### 1. Text Format (WAT)
+
 **Input:**
 ```z1r
 fn factorial(n: U32) -> U32
@@ -491,11 +495,44 @@ fn factorial(n: U32) -> U32
   (export "factorial" (func $factorial)))
 ```
 
+WAT is human-readable and useful for:
+- Debugging generated code
+- Understanding WASM semantics
+- Manual inspection of output
+
+#### 2. Binary Format (WASM)
+
+For production use, generate binary WASM directly:
+
+```bash
+# Generate binary WASM
+z1c compile myapp.z1r --target wasm --binary
+
+# With optimization
+z1c compile myapp.z1r --target wasm --binary -O O2
+
+# Custom output path
+z1c compile myapp.z1r --target wasm --binary --output myapp.wasm
+```
+
+**Binary WASM advantages:**
+- Smaller file size (compact binary encoding)
+- Faster to load and parse
+- Direct execution without text parsing
+- Standard format for all WASM runtimes
+
+**Binary structure:**
+- Starts with magic number: `0x00 0x61 0x73 0x6D` (asm)
+- WASM version 1: `0x01 0x00 0x00 0x00`
+- Sections: memory, function, export, data
+- Validated during generation
+
 **Features:**
 - Deterministic binary output
 - Capability-based imports (host functions)
 - Optimized for small code size
 - Stackful execution model
+- Automatic binary validation
 
 ### Effect Metadata
 
@@ -688,11 +725,16 @@ A successful compilation produces:
 ```
 output/
 ├── myapp.ts           # TypeScript output
-├── myapp.d.ts         # TypeScript declarations
-├── myapp.wasm         # WebAssembly binary
-├── myapp.wat          # WebAssembly text (debug)
-└── myapp.hash         # SemHash and FormHash
+├── myapp.d.ts         # TypeScript declarations (future)
+├── myapp.wasm         # WebAssembly binary (with --binary flag)
+├── myapp.wat          # WebAssembly text (default)
+└── myapp.hash         # SemHash and FormHash (future)
 ```
+
+**File sizes (typical):**
+- `.ts` - 2-5x source size (readable, with comments)
+- `.wat` - 3-8x source size (S-expressions, readable)
+- `.wasm` - 1-2x source size (binary, compact)
 
 ## Performance
 

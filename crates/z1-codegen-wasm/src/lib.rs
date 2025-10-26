@@ -487,6 +487,42 @@ pub fn generate_wasm_optimized(module: &IrModule, opt_level: z1_ir::optimize::Op
     codegen.generate(&optimized)
 }
 
+/// Generate binary WebAssembly (.wasm) from IR module
+///
+/// This function generates WAT text first, then parses it into binary format.
+/// Returns the binary WebAssembly module as a byte vector.
+pub fn generate_wasm_binary(module: &IrModule) -> Result<Vec<u8>, String> {
+    // Generate WAT text first
+    let wat_text = generate_wasm(module);
+
+    // Parse WAT to binary using wat crate
+    wat::parse_str(&wat_text).map_err(|e| format!("WAT parsing failed: {e}"))
+}
+
+/// Generate binary WebAssembly (.wasm) from IR module with optimization
+pub fn generate_wasm_binary_optimized(
+    module: &IrModule,
+    opt_level: z1_ir::optimize::OptLevel,
+) -> Result<Vec<u8>, String> {
+    let wat_text = generate_wasm_optimized(module, opt_level);
+    wat::parse_str(&wat_text).map_err(|e| format!("WAT parsing failed: {e}"))
+}
+
+/// Validate that a binary WebAssembly module is well-formed
+///
+/// Uses the `wasmparser` crate to validate that the binary conforms
+/// to the WebAssembly specification.
+pub fn validate_wasm_binary(binary: &[u8]) -> Result<(), String> {
+    use wasmparser::Validator;
+
+    let mut validator = Validator::new();
+    validator
+        .validate_all(binary)
+        .map_err(|e| format!("Invalid WASM binary: {e}"))?;
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

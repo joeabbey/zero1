@@ -384,10 +384,7 @@ fn count_statements(block: &IrBlock) -> usize {
                 then_block,
                 else_block,
                 ..
-            } => {
-                count_statements(then_block)
-                    + else_block.as_ref().map_or(0, count_statements)
-            }
+            } => count_statements(then_block) + else_block.as_ref().map_or(0, count_statements),
             IrStmt::While { body, .. } => count_statements(body),
             _ => 0,
         };

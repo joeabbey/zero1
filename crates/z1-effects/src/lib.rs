@@ -6,9 +6,13 @@
 //! - A function's effects must be a subset of the module's capabilities
 //! - Pure functions (no effects or `eff [pure]`) can be called from anywhere
 
+mod warnings;
+
 use std::collections::HashSet;
 use thiserror::Error;
 use z1_ast::{FnDecl, Module, Span};
+
+pub use warnings::{collect_warnings as collect_effect_warnings, EffectWarning};
 
 #[derive(Debug, Error)]
 pub enum EffectError {

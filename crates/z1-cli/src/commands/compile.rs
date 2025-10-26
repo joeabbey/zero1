@@ -28,6 +28,7 @@ pub struct CompileOptions {
     pub input_path: PathBuf,
     pub output_path: Option<PathBuf>,
     pub target: CompileTarget,
+    pub binary: bool,
     pub check: bool,
     pub emit_ir: bool,
     pub opt_level: z1_ir::optimize::OptLevel,
@@ -141,11 +142,25 @@ pub fn compile(opts: CompileOptions) -> Result<()> {
     let (code, extension) = match opts.target {
         CompileTarget::TypeScript => {
             let ts_code = z1_codegen_ts::generate_typescript(&ir_module);
-            (ts_code, "ts")
+            (ts_code.into_bytes(), "ts")
         }
         CompileTarget::Wasm => {
-            let wat_code = z1_codegen_wasm::generate_wasm(&ir_module);
-            (wat_code, "wat")
+            if opts.binary {
+                // Generate binary WASM
+                let wasm_binary =
+                    z1_codegen_wasm::generate_wasm_binary_optimized(&ir_module, opts.opt_level)
+                        .map_err(|e| anyhow::anyhow!("WASM binary generation failed: {}", e))?;
+
+                // Validate the generated binary
+                z1_codegen_wasm::validate_wasm_binary(&wasm_binary)
+                    .map_err(|e| anyhow::anyhow!("WASM binary validation failed: {}", e))?;
+
+                (wasm_binary, "wasm")
+            } else {
+                // Generate text WAT
+                let wat_code = z1_codegen_wasm::generate_wasm_optimized(&ir_module, opts.opt_level);
+                (wat_code.into_bytes(), "wat")
+            }
         }
     };
 
@@ -299,6 +314,7 @@ fn foo(x: U32, y: U32, z: U32) -> U32
             input_path: input.clone(),
             output_path: Some(output.clone()),
             target: CompileTarget::TypeScript,
+            binary: false,
             check: true,
             emit_ir: false,
             opt_level: z1_ir::optimize::OptLevel::O0,
@@ -324,6 +340,7 @@ fn foo(x: U32, y: U32, z: U32) -> U32
             input_path: input.clone(),
             output_path: Some(output.clone()),
             target: CompileTarget::Wasm,
+            binary: false,
             check: true,
             emit_ir: false,
             opt_level: z1_ir::optimize::OptLevel::O0,
@@ -349,6 +366,7 @@ fn foo(x: U32, y: U32, z: U32) -> U32
             input_path: input.clone(),
             output_path: Some(output.clone()),
             target: CompileTarget::TypeScript,
+            binary: false,
             check: true,
             emit_ir: true,
             opt_level: z1_ir::optimize::OptLevel::O0,
@@ -372,6 +390,7 @@ fn foo(x: U32, y: U32, z: U32) -> U32
             input_path: input,
             output_path: None,
             target: CompileTarget::TypeScript,
+            binary: false,
             check: true,
             emit_ir: false,
             opt_level: z1_ir::optimize::OptLevel::O0,
@@ -392,6 +411,7 @@ fn foo(x: U32, y: U32, z: U32) -> U32
             input_path: input,
             output_path: None,
             target: CompileTarget::TypeScript,
+            binary: false,
             check: true,
             emit_ir: false,
             opt_level: z1_ir::optimize::OptLevel::O0,
@@ -419,6 +439,7 @@ fn foo(x: U32, y: U32, z: U32) -> U32
             input_path: input,
             output_path: None,
             target: CompileTarget::TypeScript,
+            binary: false,
             check: true,
             emit_ir: false,
             opt_level: z1_ir::optimize::OptLevel::O0,
@@ -454,6 +475,7 @@ fn f6() -> Unit eff [pure] { ret Unit; }
             input_path: input,
             output_path: None,
             target: CompileTarget::TypeScript,
+            binary: false,
             check: true,
             emit_ir: false,
             opt_level: z1_ir::optimize::OptLevel::O0,
@@ -480,6 +502,7 @@ fn f6() -> Unit eff [pure] { ret Unit; }
             input_path: input,
             output_path: None,
             target: CompileTarget::TypeScript,
+            binary: false,
             check: false,
             emit_ir: false,
             opt_level: z1_ir::optimize::OptLevel::O0,
@@ -503,6 +526,7 @@ fn f6() -> Unit eff [pure] { ret Unit; }
             input_path: input,
             output_path: Some(custom_output.clone()),
             target: CompileTarget::TypeScript,
+            binary: false,
             check: true,
             emit_ir: false,
             opt_level: z1_ir::optimize::OptLevel::O0,
@@ -522,6 +546,7 @@ fn f6() -> Unit eff [pure] { ret Unit; }
             input_path: input,
             output_path: None,
             target: CompileTarget::TypeScript,
+            binary: false,
             check: true,
             emit_ir: false,
             opt_level: z1_ir::optimize::OptLevel::O0,
@@ -571,38 +596,38 @@ fn f6() -> Unit eff [pure] { ret Unit; }
     // NOTE: These tests disabled - test internal APIs that no longer exist.
     // Functionality covered by integration tests above.
 
-//     #[test]
-//     fn test_lower_to_ir_produces_valid_output() {
-//         let cell = simple_valid_cell();
-//         let module = z1_parse::parse_module(cell).unwrap();
-//         let ir = lower_to_ir(&module).unwrap();
-// 
-//         assert!(ir.contains("; IR for module:"));
-//         assert!(ir.contains("test"));
-//         assert!(ir.contains("fn add"));
-//     }
-// 
-//     #[test]
-//     fn test_generate_typescript_produces_valid_output() {
-//         let cell = simple_valid_cell();
-//         let module = z1_parse::parse_module(cell).unwrap();
-//         let ir = lower_to_ir(&module).unwrap();
-//         let ts = generate_typescript(&module, &ir);
-// 
-//         assert!(ts.contains("// Generated by Zero1 compiler"));
-//         assert!(ts.contains("TypeScript"));
-//         assert!(ts.contains("export"));
-//     }
-// 
-//     #[test]
-//     fn test_generate_wasm_produces_valid_output() {
-//         let cell = simple_valid_cell();
-//         let module = z1_parse::parse_module(cell).unwrap();
-//         let ir = lower_to_ir(&module).unwrap();
-//         let wat = generate_wasm(&module, &ir);
-// 
-//         assert!(wat.contains("(module"));
-//         assert!(wat.contains("Generated by Zero1 compiler"));
-//         assert!(wat.contains("WebAssembly"));
-//     }
+    //     #[test]
+    //     fn test_lower_to_ir_produces_valid_output() {
+    //         let cell = simple_valid_cell();
+    //         let module = z1_parse::parse_module(cell).unwrap();
+    //         let ir = lower_to_ir(&module).unwrap();
+    //
+    //         assert!(ir.contains("; IR for module:"));
+    //         assert!(ir.contains("test"));
+    //         assert!(ir.contains("fn add"));
+    //     }
+    //
+    //     #[test]
+    //     fn test_generate_typescript_produces_valid_output() {
+    //         let cell = simple_valid_cell();
+    //         let module = z1_parse::parse_module(cell).unwrap();
+    //         let ir = lower_to_ir(&module).unwrap();
+    //         let ts = generate_typescript(&module, &ir);
+    //
+    //         assert!(ts.contains("// Generated by Zero1 compiler"));
+    //         assert!(ts.contains("TypeScript"));
+    //         assert!(ts.contains("export"));
+    //     }
+    //
+    //     #[test]
+    //     fn test_generate_wasm_produces_valid_output() {
+    //         let cell = simple_valid_cell();
+    //         let module = z1_parse::parse_module(cell).unwrap();
+    //         let ir = lower_to_ir(&module).unwrap();
+    //         let wat = generate_wasm(&module, &ir);
+    //
+    //         assert!(wat.contains("(module"));
+    //         assert!(wat.contains("Generated by Zero1 compiler"));
+    //         assert!(wat.contains("WebAssembly"));
+    //     }
 }

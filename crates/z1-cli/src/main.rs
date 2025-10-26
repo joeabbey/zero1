@@ -1,4 +1,5 @@
 mod commands;
+mod diagnostics;
 mod error_printer;
 
 use anyhow::Result;
@@ -137,6 +138,9 @@ struct CompileArgs {
     /// Compilation target
     #[arg(short, long, value_enum, default_value_t = CompileTargetArg::TypeScript)]
     target: CompileTargetArg,
+    /// Generate binary .wasm instead of text .wat (requires --target wasm)
+    #[arg(short, long)]
+    binary: bool,
     /// Run all checks before compilation
     #[arg(long, default_value_t = true)]
     check: bool,
@@ -149,6 +153,21 @@ struct CompileArgs {
     /// Verbose output
     #[arg(short, long)]
     verbose: bool,
+    /// Warning level (all, default, none)
+    #[arg(long, value_enum, default_value_t = WarnLevelArg::Default)]
+    warn_level: WarnLevelArg,
+    /// Treat warnings as errors
+    #[arg(long)]
+    warn_as_error: bool,
+    /// Maximum number of errors before stopping (default: 50)
+    #[arg(long, default_value_t = 50)]
+    max_errors: usize,
+    /// Output diagnostics as JSON
+    #[arg(long)]
+    json: bool,
+    /// Disable colored output
+    #[arg(long)]
+    no_color: bool,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -164,12 +183,29 @@ enum OptLevelArg {
     O2,
 }
 
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum WarnLevelArg {
+    All,
+    Default,
+    None,
+}
+
 impl From<OptLevelArg> for z1_ir::optimize::OptLevel {
     fn from(value: OptLevelArg) -> Self {
         match value {
             OptLevelArg::O0 => z1_ir::optimize::OptLevel::O0,
             OptLevelArg::O1 => z1_ir::optimize::OptLevel::O1,
             OptLevelArg::O2 => z1_ir::optimize::OptLevel::O2,
+        }
+    }
+}
+
+impl From<WarnLevelArg> for diagnostics::WarnLevel {
+    fn from(value: WarnLevelArg) -> Self {
+        match value {
+            WarnLevelArg::All => diagnostics::WarnLevel::All,
+            WarnLevelArg::Default => diagnostics::WarnLevel::Default,
+            WarnLevelArg::None => diagnostics::WarnLevel::None,
         }
     }
 }
@@ -198,10 +234,16 @@ fn handle_compile(args: CompileArgs) -> Result<()> {
         CompileTargetArg::Wasm => commands::compile::CompileTarget::Wasm,
     };
 
+    // Validate that --binary only works with --target wasm
+    if args.binary && !matches!(args.target, CompileTargetArg::Wasm) {
+        anyhow::bail!("--binary flag requires --target wasm");
+    }
+
     let opts = commands::compile::CompileOptions {
         input_path: args.path.into(),
         output_path: args.output.map(Into::into),
         target,
+        binary: args.binary,
         check: args.check,
         emit_ir: args.emit_ir,
         opt_level: args.opt_level.into(),
