@@ -6,6 +6,10 @@
 //! - Suggestion system with fuzzy name matching
 //! - JSON output for tooling integration
 
+#![allow(clippy::uninlined_format_args)]
+#![allow(clippy::needless_range_loop)]
+#![allow(clippy::should_implement_trait)]
+#![allow(dead_code)]
 use colored::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -16,6 +20,7 @@ use z1_typeck::TypeError;
 
 /// Diagnostic severity level.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum DiagnosticLevel {
     Error,
     Warning,
@@ -117,7 +122,7 @@ impl Diagnostic {
             ParseError::Unexpected { span, .. } | ParseError::Invalid { span, .. } => *span,
         };
 
-        Self::error(format!("Parse Error: {}", error), source_file)
+        Self::error(format!("Parse Error: {error}"), source_file)
             .with_span(span)
             .with_code("P001".to_string())
     }
@@ -133,8 +138,8 @@ impl Diagnostic {
             _ => None,
         };
 
-        let mut diag = Self::error(format!("Type Error: {}", error), source_file)
-            .with_code("T001".to_string());
+        let mut diag =
+            Self::error(format!("Type Error: {error}"), source_file).with_code("T001".to_string());
 
         if let Some(span) = span_opt {
             diag = diag.with_span(span);
@@ -153,15 +158,14 @@ impl Diagnostic {
                 ..
             } => {
                 let suggestion = format!(
-                    "Add '{}' to module capabilities: module {} caps=[{}]",
-                    effect, module, effect
+                    "Add '{effect}' to module capabilities: module {module} caps=[{effect}]"
                 );
                 (*fn_span, Some(suggestion))
             }
             EffectError::UnknownEffect { fn_span, .. } => (*fn_span, None),
         };
 
-        let mut diag = Self::error(format!("Effect Error: {}", error), source_file)
+        let mut diag = Self::error(format!("Effect Error: {error}"), source_file)
             .with_span(span)
             .with_code("E001".to_string());
 
@@ -209,6 +213,7 @@ pub enum WarnLevel {
 }
 
 impl WarnLevel {
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
             "all" => Some(WarnLevel::All),
@@ -362,11 +367,11 @@ pub fn print_diagnostics(diagnostics: &[Diagnostic], source: &str, config: &Diag
 
     if error_count > 0 || warning_count > 0 {
         eprintln!();
-        let summary = format!("{} error(s), {} warning(s)", error_count, warning_count);
+        let summary = format!("{error_count} error(s), {warning_count} warning(s)");
         if config.use_colors {
             eprintln!("{}", summary.bold());
         } else {
-            eprintln!("{}", summary);
+            eprintln!("{summary}");
         }
     }
 }
@@ -382,20 +387,20 @@ pub fn print_diagnostic(diagnostic: &Diagnostic, source: &str, config: &Diagnost
         header
     };
 
-    eprintln!("{}", colored_header);
+    eprintln!("{colored_header}");
 
     if let Some(span) = diagnostic.span {
         print_source_snippet(source, &diagnostic.source_file, span, config);
     }
 
     if let Some(suggestion) = &diagnostic.suggestion {
-        let help_msg = format!("💡 Help: {}", suggestion);
+        let help_msg = format!("💡 Help: {suggestion}");
         let colored_help = if config.use_colors {
             help_msg.green().to_string()
         } else {
             help_msg
         };
-        eprintln!("{}", colored_help);
+        eprintln!("{colored_help}");
     }
 
     eprintln!();
@@ -404,30 +409,30 @@ pub fn print_diagnostic(diagnostic: &Diagnostic, source: &str, config: &Diagnost
 /// Print diagnostics as JSON.
 fn print_diagnostics_json(diagnostics: &[Diagnostic]) {
     let json = serde_json::to_string_pretty(diagnostics)
-        .unwrap_or_else(|e| format!("{{\"error\": \"Failed to serialize diagnostics: {}\"}}", e));
-    println!("{}", json);
+        .unwrap_or_else(|e| format!("{{\"error\": \"Failed to serialize diagnostics: {e}\"}}"));
+    println!("{json}");
 }
 
 /// Print a source snippet with location marker.
 fn print_source_snippet(source: &str, file_path: &str, span: Span, config: &DiagnosticConfig) {
     let (line_num, col_num, line_text) = extract_line_info(source, span);
 
-    let location = format!("  ┌─ {}:{}:{}", file_path, line_num, col_num);
+    let location = format!("  ┌─ {file_path}:{line_num}:{col_num}");
     let colored_location = if config.use_colors {
         location.blue().to_string()
     } else {
         location
     };
-    eprintln!("{}", colored_location);
+    eprintln!("{colored_location}");
     eprintln!("  │");
 
-    let line_num_str = format!("{:>3}", line_num);
+    let line_num_str = format!("{line_num:>3}");
     let colored_line_num = if config.use_colors {
         line_num_str.blue().to_string()
     } else {
         line_num_str
     };
-    eprintln!("{} │ {}", colored_line_num, line_text);
+    eprintln!("{colored_line_num} │ {line_text}");
 
     let caret_offset = col_num - 1;
     let span_len = (span.end - span.start).max(1) as usize;

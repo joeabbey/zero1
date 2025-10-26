@@ -43,7 +43,7 @@ fn test_compile_wasm_binary_flag() {
 
     // Run z1c compile with --binary flag
     let status = z1_command()
-        .args(&[
+        .args([
             "compile",
             input.to_str().unwrap(),
             "--target",
@@ -51,7 +51,7 @@ fn test_compile_wasm_binary_flag() {
             "--binary",
             "--output",
             output.to_str().unwrap(),
-             // Skip checks for faster test
+            // Skip checks for faster test
         ])
         .status()
         .expect("Failed to run z1 compile");
@@ -85,14 +85,13 @@ fn test_compile_wasm_wat_default() {
 
     // Run z1c compile without --binary flag (should generate WAT)
     let status = z1_command()
-        .args(&[
+        .args([
             "compile",
             input.to_str().unwrap(),
             "--target",
             "wasm",
             "--output",
             output.to_str().unwrap(),
-            
         ])
         .status()
         .expect("Failed to run z1 compile");
@@ -112,13 +111,12 @@ fn test_binary_flag_requires_wasm_target() {
 
     // Try to use --binary with --target typescript (should fail)
     let output = z1_command()
-        .args(&[
+        .args([
             "compile",
             input.to_str().unwrap(),
             "--target",
             "typescript",
             "--binary",
-            
         ])
         .output()
         .expect("Failed to run z1 compile");
@@ -177,14 +175,14 @@ fn test_binary_flag_requires_wasm_target() {
 fn test_binary_with_optimization_levels() {
     let (_dir, input) = setup_test_cell(simple_valid_cell());
 
-    for opt_level in &["O0", "O1", "O2"] {
+    for opt_level in &["o0", "o1", "o2"] {
         let output = input
             .parent()
             .unwrap()
-            .join(format!("test_{}.wasm", opt_level));
+            .join(format!("test_{opt_level}.wasm"));
 
         let status = z1_command()
-            .args(&[
+            .args([
                 "compile",
                 input.to_str().unwrap(),
                 "--target",
@@ -194,17 +192,15 @@ fn test_binary_with_optimization_levels() {
                 opt_level,
                 "--output",
                 output.to_str().unwrap(),
-                
             ])
             .status()
             .expect("Failed to run z1 compile");
 
         assert!(
             status.success(),
-            "Compilation with {} should succeed",
-            opt_level
+            "Compilation with {opt_level} should succeed"
         );
-        assert!(output.exists(), "{} output should be created", opt_level);
+        assert!(output.exists(), "{opt_level} output should be created");
 
         let binary = fs::read(&output).expect("Should read binary");
         assert_eq!(
@@ -221,7 +217,7 @@ fn test_verbose_mode_shows_binary_generation() {
     let output = input.with_extension("wasm");
 
     let output_cmd = z1_command()
-        .args(&[
+        .args([
             "compile",
             input.to_str().unwrap(),
             "--target",
@@ -230,7 +226,6 @@ fn test_verbose_mode_shows_binary_generation() {
             "--output",
             output.to_str().unwrap(),
             "--verbose",
-            
         ])
         .output()
         .expect("Failed to run z1 compile");
@@ -250,13 +245,12 @@ fn test_binary_output_default_path() {
     // Don't specify output path - should default to test.wasm
 
     let status = z1_command()
-        .args(&[
+        .args([
             "compile",
             input.to_str().unwrap(),
             "--target",
             "wasm",
             "--binary",
-            
         ])
         .status()
         .expect("Failed to run z1 compile");

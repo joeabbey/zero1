@@ -3,7 +3,7 @@
 //! These tests verify that the optimization passes work correctly
 //! both individually and in combination.
 
-use z1_ir::optimize::{optimize, OptLevel, OptStats};
+use z1_ir::optimize::{optimize, OptLevel};
 use z1_ir::{IrBinOp, IrBlock, IrExpr, IrFunction, IrLiteral, IrModule, IrStmt, IrType};
 
 // ===== Dead Code Elimination Tests =====

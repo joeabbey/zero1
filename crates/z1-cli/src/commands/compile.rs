@@ -126,7 +126,7 @@ pub fn compile(opts: CompileOptions) -> Result<()> {
     // If emit-ir, write IR and stop
     if opts.emit_ir {
         let output_path = determine_output_path(&opts.input_path, &opts.output_path, "ir.txt");
-        let ir_debug = format!("{ir_module:#?}");
+        let ir_debug = format!("; IR for module: {}\n\n{ir_module:#?}", ir_module.name);
         fs::write(&output_path, &ir_debug)
             .with_context(|| format!("Failed to write IR to {}", output_path.display()))?;
 
@@ -149,7 +149,7 @@ pub fn compile(opts: CompileOptions) -> Result<()> {
                 // Generate binary WASM
                 let wasm_binary =
                     z1_codegen_wasm::generate_wasm_binary_optimized(&ir_module, opts.opt_level)
-                        .map_err(|e| anyhow::anyhow!("WASM binary generation failed: {}", e))?;
+                        .map_err(|e| anyhow::anyhow!("WASM binary generation failed: {e}"))?;
 
                 // Note: Validation is available but commented out due to known issues in WAT generation
                 // Uncomment this when WAT generation is fully correct

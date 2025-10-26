@@ -35,16 +35,16 @@ impl std::fmt::Display for TypeWarning {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             TypeWarning::UnusedVariable { name, .. } => {
-                write!(f, "Unused variable '{}'", name)
+                write!(f, "Unused variable '{name}'")
             }
             TypeWarning::UnusedParameter { name, function, .. } => {
-                write!(f, "Unused parameter '{}' in function '{}'", name, function)
+                write!(f, "Unused parameter '{name}' in function '{function}'")
             }
             TypeWarning::ShadowedVariable { name, .. } => {
-                write!(f, "Variable '{}' shadows a previous declaration", name)
+                write!(f, "Variable '{name}' shadows a previous declaration")
             }
             TypeWarning::RedundantTypeAnnotation { name, .. } => {
-                write!(f, "Type annotation for '{}' is redundant", name)
+                write!(f, "Type annotation for '{name}' is redundant")
             }
         }
     }

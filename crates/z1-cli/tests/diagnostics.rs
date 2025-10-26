@@ -114,7 +114,7 @@ fn test_suggest_similar_name_returns_none_for_distant_matches() {
         suggest_similar_name("completely_different", &available),
         None
     );
-    assert_eq!(suggest_similar_name("xyz", &available), None);
+    assert_eq!(suggest_similar_name("qwerty", &available), None);
 }
 
 #[test]
@@ -318,7 +318,7 @@ fn test_max_errors_limit() {
     // Verify we can collect up to max_errors
     let mut collector = DiagnosticCollector::new();
     for i in 0..15 {
-        collector.add_error(format!("Error {}", i), "test.z1c".to_string());
+        collector.add_error(format!("Error {i}"), "test.z1c".to_string());
     }
 
     // All errors collected (enforcement would happen at display time)
