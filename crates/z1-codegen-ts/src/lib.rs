@@ -347,3 +347,58 @@ pub fn generate_typescript(module: &IrModule) -> String {
     let mut codegen = TsCodegen::new();
     codegen.generate(module)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_generate_simple_function() {
+        let module = IrModule {
+            name: "test".to_string(),
+            version: "1.0.0".to_string(),
+            imports: vec![],
+            types: vec![],
+            functions: vec![IrFunction {
+                name: "greet".to_string(),
+                params: vec![("name".to_string(), IrType::Str)],
+                return_type: IrType::Str,
+                effects: vec![],
+                body: IrBlock {
+                    statements: vec![IrStmt::Return {
+                        value: Some(IrExpr::Literal(IrLiteral::Str("Hello".to_string()))),
+                    }],
+                },
+            }],
+            exports: vec!["greet".to_string()],
+        };
+
+        let ts = generate_typescript(&module);
+        assert!(ts.contains("export function greet(name: string): string"));
+        assert!(ts.contains("return \"Hello\";"));
+        assert!(ts.contains("export { greet };"));
+    }
+
+    #[test]
+    fn test_generate_type_interface() {
+        let module = IrModule {
+            name: "test".to_string(),
+            version: "1.0.0".to_string(),
+            imports: vec![],
+            types: vec![IrTypeDef {
+                name: "Point".to_string(),
+                ty: IrType::Record(vec![
+                    ("x".to_string(), IrType::U32),
+                    ("y".to_string(), IrType::U32),
+                ]),
+            }],
+            functions: vec![],
+            exports: vec!["Point".to_string()],
+        };
+
+        let ts = generate_typescript(&module);
+        assert!(ts.contains("export interface Point {"));
+        assert!(ts.contains("x: number;"));
+        assert!(ts.contains("y: number;"));
+    }
+}
