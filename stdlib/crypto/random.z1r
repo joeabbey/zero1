@@ -1,0 +1,30 @@
+module std.crypto.random : 1.0
+  ctx = 256
+  caps = [crypto]
+
+// SymbolMap: { randomBytes ↔ rb, randomU32 ↔ r32, randomU64 ↔ r64, randomRange ↔ rr }
+#sym { randomBytes: rb, randomU32: r32, randomU64: r64, randomRange: rr }
+
+fn randomBytes(length: U32) -> Str
+  eff [crypto]
+{
+  ret "";
+}
+
+fn randomU32() -> U32
+  eff [crypto]
+{
+  ret 0;
+}
+
+fn randomU64() -> U64
+  eff [crypto]
+{
+  ret 0;
+}
+
+fn randomRange(min: U32, max: U32) -> U32
+  eff [crypto]
+{
+  ret min;
+}

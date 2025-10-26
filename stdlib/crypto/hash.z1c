@@ -1,0 +1,16 @@
+m std.crypto.hash:1.0 ctx=256 caps=[crypto]
+#sym { sha256: s2, sha3_256: s3, hashBytes: hb, HashAlgorithm: HA }
+
+t HA = Sha256 | Sha3_256 | Blake3
+
+f s2(data: Str)->Str eff [crypto] {
+  ret "";
+}
+
+f s3(data: Str)->Str eff [crypto] {
+  ret "";
+}
+
+f hb(data: Str, algorithm: HA)->Str eff [crypto] {
+  ret "";
+}

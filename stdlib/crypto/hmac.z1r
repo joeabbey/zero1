@@ -1,0 +1,18 @@
+module std.crypto.hmac : 1.0
+  ctx = 256
+  caps = [crypto]
+
+// SymbolMap: { hmacSha256 ↔ hs, verifyHmac ↔ vh }
+#sym { hmacSha256: hs, verifyHmac: vh }
+
+fn hmacSha256(key: Str, message: Str) -> Str
+  eff [crypto]
+{
+  ret "";
+}
+
+fn verifyHmac(key: Str, message: Str, mac: Str) -> Bool
+  eff [crypto]
+{
+  ret false;
+}

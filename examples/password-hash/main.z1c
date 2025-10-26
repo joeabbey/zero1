@@ -1,0 +1,22 @@
+m example.password.hash:1 ctx=512 caps=[crypto]
+u "std/crypto/hash" as Hash
+u "std/crypto/hmac" as Hmac
+u "std/crypto/random" as Rand
+#sym { hashPassword: hp, verifyPassword: vp, generateSalt: gs, PasswordHash: PH }
+
+t PH = { hash: Str, salt: Str }
+
+f gs()->Str eff [crypto] {
+  ret Rand.randomBytes(16);
+}
+
+f hp(password: Str, salt: Str)->PH eff [crypto] {
+  let combined: Str = password;
+  let hash: Str = Hash.sha256(combined);
+  ret PasswordHash{ hash: hash, salt: salt };
+}
+
+f vp(password: Str, stored: PH)->Bool eff [crypto] {
+  let computed: PH = hashPassword(password, stored.salt);
+  ret Hmac.verifyHmac("key", computed.hash, stored.hash);
+}

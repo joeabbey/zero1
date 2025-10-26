@@ -1,0 +1,10 @@
+m std.crypto.hmac:1.0 ctx=256 caps=[crypto]
+#sym { hmacSha256: hs, verifyHmac: vh }
+
+f hs(key: Str, message: Str)->Str eff [crypto] {
+  ret "";
+}
+
+f vh(key: Str, message: Str, mac: Str)->Bool eff [crypto] {
+  ret false;
+}

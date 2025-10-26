@@ -1,0 +1,33 @@
+module example.password.hash : 1
+  ctx = 512
+  caps = [crypto]
+
+use "std/crypto/hash" as Hash
+use "std/crypto/hmac" as Hmac
+use "std/crypto/random" as Rand
+
+// SymbolMap: { hashPassword ↔ hp, verifyPassword ↔ vp, generateSalt ↔ gs, PasswordHash ↔ PH }
+#sym { hashPassword: hp, verifyPassword: vp, generateSalt: gs, PasswordHash: PH }
+
+type PasswordHash = { hash: Str, salt: Str }
+
+fn generateSalt() -> Str
+  eff [crypto]
+{
+  ret Rand.randomBytes(16);
+}
+
+fn hashPassword(password: Str, salt: Str) -> PasswordHash
+  eff [crypto]
+{
+  let combined: Str = password;
+  let hash: Str = Hash.sha256(combined);
+  ret PasswordHash{ hash: hash, salt: salt };
+}
+
+fn verifyPassword(password: Str, stored: PasswordHash) -> Bool
+  eff [crypto]
+{
+  let computed: PasswordHash = hashPassword(password, stored.salt);
+  ret Hmac.verifyHmac("key", computed.hash, stored.hash);
+}

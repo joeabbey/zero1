@@ -1,0 +1,18 @@
+m std.crypto.random:1.0 ctx=256 caps=[crypto]
+#sym { randomBytes: rb, randomU32: r32, randomU64: r64, randomRange: rr }
+
+f rb(length: U32)->Str eff [crypto] {
+  ret "";
+}
+
+f r32()->U32 eff [crypto] {
+  ret 0;
+}
+
+f r64()->U64 eff [crypto] {
+  ret 0;
+}
+
+f rr(min: U32, max: U32)->U32 eff [crypto] {
+  ret min;
+}

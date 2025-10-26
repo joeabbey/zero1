@@ -1,0 +1,26 @@
+module std.crypto.hash : 1.0
+  ctx = 256
+  caps = [crypto]
+
+// SymbolMap: { sha256 ↔ s2, sha3_256 ↔ s3, hashBytes ↔ hb, HashAlgorithm ↔ HA }
+#sym { sha256: s2, sha3_256: s3, hashBytes: hb, HashAlgorithm: HA }
+
+type HashAlgorithm = Sha256 | Sha3_256 | Blake3
+
+fn sha256(data: Str) -> Str
+  eff [crypto]
+{
+  ret "";
+}
+
+fn sha3_256(data: Str) -> Str
+  eff [crypto]
+{
+  ret "";
+}
+
+fn hashBytes(data: Str, algorithm: HashAlgorithm) -> Str
+  eff [crypto]
+{
+  ret "";
+}
