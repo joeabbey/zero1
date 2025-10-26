@@ -47,9 +47,9 @@ pub fn print_parse_error(
         header
     };
 
-    println!("{colored_header}");
-    print_source_snippet(source, file_path, span, config);
-    println!();
+    eprintln!("{colored_header}");
+    eprint_source_snippet(source, file_path, span, config);
+    eprintln!();
 }
 
 /// Pretty-print a type error with source context.
@@ -75,11 +75,11 @@ pub fn print_type_error(
         header
     };
 
-    println!("{colored_header}");
+    eprintln!("{colored_header}");
     if let Some(span) = span_opt {
-        print_source_snippet(source, file_path, span, config);
+        eprint_source_snippet(source, file_path, span, config);
     }
-    println!();
+    eprintln!();
 }
 
 /// Pretty-print an effect error with source context.
@@ -101,8 +101,8 @@ pub fn print_effect_error(
         header
     };
 
-    println!("{colored_header}");
-    print_source_snippet(source, file_path, span, config);
+    eprintln!("{colored_header}");
+    eprint_source_snippet(source, file_path, span, config);
 
     // Add helpful hint for missing capability errors
     if let EffectError::MissingCapability { effect, module, .. } = error {
@@ -113,13 +113,13 @@ pub fn print_effect_error(
         } else {
             hint
         };
-        println!("{colored_hint}");
+        eprintln!("{colored_hint}");
     }
-    println!();
+    eprintln!();
 }
 
-/// Print a source snippet with location marker.
-fn print_source_snippet(source: &str, file_path: &str, span: Span, config: &ErrorPrinterConfig) {
+/// Print a source snippet with location marker to stderr.
+fn eprint_source_snippet(source: &str, file_path: &str, span: Span, config: &ErrorPrinterConfig) {
     let (line_num, col_num, line_text) = extract_line_info(source, span);
 
     // Print location header: "  ┌─ file.z1c:5:12"
@@ -129,8 +129,8 @@ fn print_source_snippet(source: &str, file_path: &str, span: Span, config: &Erro
     } else {
         location
     };
-    println!("{colored_location}");
-    println!("  │");
+    eprintln!("{colored_location}");
+    eprintln!("  │");
 
     // Print line number and source line: " 5 │     let x: U32 = \"hello\";"
     let line_num_str = format!("{line_num:>3}");
@@ -139,7 +139,7 @@ fn print_source_snippet(source: &str, file_path: &str, span: Span, config: &Erro
     } else {
         line_num_str
     };
-    println!("{colored_line_num} │ {line_text}");
+    eprintln!("{colored_line_num} │ {line_text}");
 
     // Print caret line: "    │            ^^^"
     let caret_offset = col_num - 1; // Column is 1-indexed
@@ -150,7 +150,7 @@ fn print_source_snippet(source: &str, file_path: &str, span: Span, config: &Erro
     } else {
         carets
     };
-    println!("    │ {}{colored_carets}", " ".repeat(caret_offset));
+    eprintln!("    │ {}{colored_carets}", " ".repeat(caret_offset));
 }
 
 /// Extract line number, column number, and line text for a given span.

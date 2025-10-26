@@ -1,4 +1,5 @@
 mod commands;
+mod error_printer;
 
 use anyhow::Result;
 use clap::{Args, Parser, Subcommand, ValueEnum};
@@ -298,7 +299,11 @@ fn handle_fmt(args: FmtArgs) -> Result<()> {
 
 fn handle_hash(path: String) -> Result<()> {
     let source = fs::read_to_string(&path)?;
-    let module = z1_parse::parse_module(&source)?;
+    let module = z1_parse::parse_module(&source).map_err(|e| {
+        let config = error_printer::ErrorPrinterConfig::default();
+        error_printer::print_parse_error(&e, &source, &path, &config);
+        anyhow::anyhow!("Parse failed")
+    })?;
     let hashes = z1_hash::module_hashes(&module);
     println!("semhash: {}", hashes.semantic);
     println!("formhash: {}", hashes.format);
@@ -338,7 +343,11 @@ fn format_stream(args: &FmtArgs) -> Result<()> {
     let options = z1_fmt::FmtOptions {
         symmap_style: args.symmap.into(),
     };
-    let module = z1_parse::parse_module(&source)?;
+    let module = z1_parse::parse_module(&source).map_err(|e| {
+        let config = error_printer::ErrorPrinterConfig::default();
+        error_printer::print_parse_error(&e, &source, "<stdin>", &config);
+        anyhow::anyhow!("Parse failed")
+    })?;
     let formatted = z1_fmt::format_module(&module, mode, &options)?;
     if args.check {
         if normalize_newlines(&formatted) != normalize_newlines(&source) {
@@ -359,7 +368,11 @@ fn format_file(path: &str, args: &FmtArgs) -> Result<bool> {
     let options = z1_fmt::FmtOptions {
         symmap_style: args.symmap.into(),
     };
-    let module = z1_parse::parse_module(&source)?;
+    let module = z1_parse::parse_module(&source).map_err(|e| {
+        let config = error_printer::ErrorPrinterConfig::default();
+        error_printer::print_parse_error(&e, &source, path, &config);
+        anyhow::anyhow!("Parse failed")
+    })?;
     let formatted = z1_fmt::format_module(&module, mode, &options)?;
     let changed = normalize_newlines(&formatted) != normalize_newlines(&source);
     if args.check {
@@ -377,7 +390,11 @@ fn format_file(path: &str, args: &FmtArgs) -> Result<bool> {
 
 fn handle_ctx(args: CtxArgs) -> Result<()> {
     let source = fs::read_to_string(&args.path)?;
-    let module = z1_parse::parse_module(&source)?;
+    let module = z1_parse::parse_module(&source).map_err(|e| {
+        let config = error_printer::ErrorPrinterConfig::default();
+        error_printer::print_parse_error(&e, &source, &args.path, &config);
+        anyhow::anyhow!("Parse failed")
+    })?;
 
     let config = z1_ctx::EstimateConfig {
         chars_per_token: args

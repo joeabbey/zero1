@@ -14,6 +14,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use z1_ast::Module;
 
+use crate::error_printer;
+
 /// Compilation target language.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CompileTarget {
@@ -44,14 +46,20 @@ pub fn compile(opts: CompileOptions) -> Result<()> {
     if opts.verbose {
         println!("  [1/7] Parsing...");
     }
-    let module = z1_parse::parse_module(&source).context("Parse error")?;
+
+    let file_path = opts.input_path.to_string_lossy().to_string();
+    let module = z1_parse::parse_module(&source).map_err(|e| {
+        let config = error_printer::ErrorPrinterConfig::default();
+        error_printer::print_parse_error(&e, &source, &file_path, &config);
+        anyhow::anyhow!("Parse failed")
+    })?;
 
     // Step 2: Type check (if enabled)
     if opts.check {
         if opts.verbose {
             println!("  [2/7] Type checking...");
         }
-        check_types(&module).context("Type check failed")?;
+        check_types(&module, &source, &file_path).context("Type check failed")?;
     } else if opts.verbose {
         println!("  [2/7] Type checking... (skipped)");
     }
@@ -61,7 +69,7 @@ pub fn compile(opts: CompileOptions) -> Result<()> {
         if opts.verbose {
             println!("  [3/7] Effect checking...");
         }
-        check_effects(&module).context("Effect check failed")?;
+        check_effects(&module, &source, &file_path).context("Effect check failed")?;
     } else if opts.verbose {
         println!("  [3/7] Effect checking... (skipped)");
     }
@@ -138,13 +146,21 @@ pub fn compile(opts: CompileOptions) -> Result<()> {
 }
 
 /// Type check the module using z1-typeck.
-fn check_types(module: &Module) -> Result<()> {
-    z1_typeck::check_module(module).map_err(|e| anyhow::anyhow!("{e}"))
+fn check_types(module: &Module, source: &str, file_path: &str) -> Result<()> {
+    z1_typeck::check_module(module).map_err(|e| {
+        let config = error_printer::ErrorPrinterConfig::default();
+        error_printer::print_type_error(&e, source, file_path, &config);
+        anyhow::anyhow!("Type check failed")
+    })
 }
 
 /// Effect check the module using z1-effects.
-fn check_effects(module: &Module) -> Result<()> {
-    z1_effects::check_module(module).map_err(|e| anyhow::anyhow!("{e}"))
+fn check_effects(module: &Module, source: &str, file_path: &str) -> Result<()> {
+    z1_effects::check_module(module).map_err(|e| {
+        let config = error_printer::ErrorPrinterConfig::default();
+        error_printer::print_effect_error(&e, source, file_path, &config);
+        anyhow::anyhow!("Effect check failed")
+    })
 }
 
 /// Context estimation with budget enforcement.
