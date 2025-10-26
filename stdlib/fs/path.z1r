@@ -1,0 +1,31 @@
+module std.fs.path : 1.0
+  ctx = 128
+  caps = []
+
+#sym { ExtOption: EO, join: j, basename: bn, dirname: dn, extension: ext }
+
+type ExtOption = Some{ ext: Str } | None{ }
+
+fn join(a: Str, b: Str) -> Str
+  eff [pure]
+{
+  return a;
+}
+
+fn basename(path: Str) -> Str
+  eff [pure]
+{
+  return path;
+}
+
+fn dirname(path: Str) -> Str
+  eff [pure]
+{
+  return path;
+}
+
+fn extension(path: Str) -> ExtOption
+  eff [pure]
+{
+  return None{ };
+}

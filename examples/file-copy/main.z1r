@@ -1,0 +1,29 @@
+module example.filecopy : 1.0
+  ctx = 512
+  caps = [fs.ro, fs.rw]
+
+use "std/fs/core" as fs only [readText, writeText, exists, ReadResult, WriteResult]
+use "std/fs/path" as path only [basename]
+
+// SymbolMap: { copyFile ↔ cf, main ↔ m }
+
+fn copyFile(src: Str, dest: Str) -> WriteResult
+  eff [fs]
+{
+  let srcExists: Bool = fs.exists(src);
+
+  if srcExists {
+    let content: ReadResult = fs.readText(src);
+    let result: WriteResult = fs.writeText(dest, "");
+    return result;
+  } else {
+    return Err{ error: "Source file does not exist" };
+  }
+}
+
+fn main() -> Unit
+  eff [fs]
+{
+  let result: WriteResult = copyFile("input.txt", "output.txt");
+  return ();
+}

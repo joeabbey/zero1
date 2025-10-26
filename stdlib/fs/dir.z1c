@@ -1,0 +1,18 @@
+m std.fs.dir:1.0 ctx=256 caps=[fs.ro, fs.rw]
+#sym { ListResult: LR, DirResult: DR, list: ls, createDir: cd, removeDir: rd }
+
+t LR = Ok{ files: Str } | Err{ error: Str }
+
+t DR = Ok{ } | Err{ error: Str }
+
+f ls(path: Str)->LR eff [fs] {
+  ret Ok{ files: "" };
+}
+
+f cd(path: Str)->DR eff [fs] {
+  ret Ok{ };
+}
+
+f rd(path: Str)->DR eff [fs] {
+  ret Ok{ };
+}

@@ -41,7 +41,7 @@ Zero1 (Z1) is a Rust-based toolchain plus language optimized for LLM agent workf
 ### M4 – Ecosystem & Production Readiness (Week 4‑7)
 
 #### Phase 1 - Foundation (Week 4) 🚧
-- [ ] **stdlib/fs** - File system operations (read, write, directories, paths). Requires `fs.ro`/`fs.rw` capabilities. 15+ tests.
+- [x] **stdlib/fs** - File system operations (read, write, directories, paths). Requires `fs.ro`/`fs.rw` capabilities. _(Complete: 3 modules - core.z1c, dir.z1c, path.z1c with 16 passing tests; file-copy example; full README documentation)_
 - [x] **stdlib/crypto** - Cryptographic operations (SHA-256, SHA3, HMAC, random). Requires `crypto` capability. _(Complete: 3 modules with 15 passing tests; hash.z1c, hmac.z1c, random.z1c; password-hash example)_
 - [x] **stdlib/env** - Environment & process (env vars, args, exit). Requires `env` capability. 10+ tests. _(Complete: `stdlib/env/vars.z1c`, `stdlib/env/args.z1c`, `stdlib/env/process.z1c` with 16 passing tests; example in `examples/config-loader/`)_
 - [ ] **Enhanced error messages** - Add source spans to all errors, pretty-print with snippets, color-coded output. 10+ tests.

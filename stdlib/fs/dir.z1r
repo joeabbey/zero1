@@ -1,0 +1,27 @@
+module std.fs.dir : 1.0
+  ctx = 256
+  caps = [fs.ro, fs.rw]
+
+#sym { ListResult: LR, DirResult: DR, list: ls, createDir: cd, removeDir: rd }
+
+type ListResult = Ok{ files: Str } | Err{ error: Str }
+
+type DirResult = Ok{ } | Err{ error: Str }
+
+fn list(path: Str) -> ListResult
+  eff [fs]
+{
+  return Ok{ files: "" };
+}
+
+fn createDir(path: Str) -> DirResult
+  eff [fs]
+{
+  return Ok{ };
+}
+
+fn removeDir(path: Str) -> DirResult
+  eff [fs]
+{
+  return Ok{ };
+}

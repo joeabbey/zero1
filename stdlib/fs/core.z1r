@@ -1,0 +1,33 @@
+module std.fs.core : 1.0
+  ctx = 256
+  caps = [fs.ro, fs.rw]
+
+#sym { ReadResult: RR, WriteResult: WR, readText: rt, writeText: wt, exists: ex, remove: rm }
+
+type ReadResult = Ok{ content: Str } | Err{ error: Str }
+
+type WriteResult = Ok{ } | Err{ error: Str }
+
+fn readText(path: Str) -> ReadResult
+  eff [fs]
+{
+  return Ok{ content: "" };
+}
+
+fn writeText(path: Str, content: Str) -> WriteResult
+  eff [fs]
+{
+  return Ok{ };
+}
+
+fn exists(path: Str) -> Bool
+  eff [fs]
+{
+  return false;
+}
+
+fn remove(path: Str) -> WriteResult
+  eff [fs]
+{
+  return Ok{ };
+}

@@ -1,0 +1,22 @@
+m std.fs.core:1.0 ctx=256 caps=[fs.ro, fs.rw]
+#sym { ReadResult: RR, WriteResult: WR, readText: rt, writeText: wt, exists: ex, remove: rm }
+
+t RR = Ok{ content: Str } | Err{ error: Str }
+
+t WR = Ok{ } | Err{ error: Str }
+
+f rt(path: Str)->RR eff [fs] {
+  ret Ok{ content: "" };
+}
+
+f wt(path: Str, content: Str)->WR eff [fs] {
+  ret Ok{ };
+}
+
+f ex(path: Str)->Bool eff [fs] {
+  ret false;
+}
+
+f rm(path: Str)->WR eff [fs] {
+  ret Ok{ };
+}
