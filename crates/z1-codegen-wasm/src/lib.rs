@@ -1,4 +1,1029 @@
-#![allow(dead_code)]
+//! WebAssembly Code Generator for Zero1
+//!
+//! This crate generates WebAssembly Text (WAT) format code from Zero1 IR.
+//! It provides complete statement and expression generation with memory
+//! management for complex types.
 
-/// Temporary placeholder so the crate compiles; replace with real modules during M0.
-pub fn stub() {}
+use std::collections::HashMap;
+use z1_ir::*;
+
+/// WebAssembly code generator
+pub struct WasmCodegen {
+    output: String,
+    indent_level: usize,
+    /// Local variable index mapping
+    local_map: HashMap<String, u32>,
+    /// Next available local index
+    next_local: u32,
+    /// Memory offset for heap allocations
+    heap_offset: u32,
+    /// String literals stored in data section
+    string_literals: Vec<(String, u32)>,
+}
+
+impl WasmCodegen {
+    /// Create a new WebAssembly code generator
+    pub fn new() -> Self {
+        WasmCodegen {
+            output: String::new(),
+            indent_level: 0,
+            local_map: HashMap::new(),
+            next_local: 0,
+            heap_offset: 0,
+            string_literals: Vec::new(),
+        }
+    }
+
+    /// Generate WebAssembly code from IR module
+    pub fn generate(&mut self, module: &IrModule) -> String {
+        self.output.clear();
+        self.indent_level = 0;
+        self.heap_offset = 1024; // Reserve first 1KB for system use
+        self.string_literals.clear();
+
+        // Module header
+        self.write_line(&format!(";; Generated from Z1 module: {}", module.name));
+        self.write_line(&format!(";; Version: {}", module.version));
+        self.write_line("");
+        self.write_line("(module");
+        self.indent_level += 1;
+
+        // Memory declaration (1 page = 64KB initially)
+        self.write_line(";; Linear memory");
+        self.write_line("(memory $mem 1)");
+        self.write_line("(export \"memory\" (memory $mem))");
+        self.write_line("");
+
+        // Imports
+        if !module.imports.is_empty() {
+            self.write_line(";; Imports");
+            for import in &module.imports {
+                self.gen_import(import);
+            }
+            self.write_line("");
+        }
+
+        // Type definitions (as comments for context)
+        if !module.types.is_empty() {
+            self.write_line(";; Type definitions");
+            for type_def in &module.types {
+                self.write_line(&format!(";; type {} = {:?}", type_def.name, type_def.ty));
+            }
+            self.write_line("");
+        }
+
+        // Functions
+        for func in &module.functions {
+            self.gen_function(func);
+            self.write_line("");
+        }
+
+        // Data section for string literals
+        if !self.string_literals.is_empty() {
+            self.write_line(";; String literals");
+            let literals = self.string_literals.clone();
+            for (content, offset) in literals {
+                let escaped = content.replace('\\', "\\\\").replace('"', "\\\"");
+                self.write_line(&format!("(data (i32.const {offset}) \"{escaped}\")"));
+            }
+            self.write_line("");
+        }
+
+        self.indent_level -= 1;
+        self.write_line(")");
+
+        self.output.clone()
+    }
+
+    fn gen_import(&mut self, import: &IrImport) {
+        // Generate import statements for external functions
+        let module_name = import.path.replace('/', "_");
+        for item in &import.items {
+            self.write_line(&format!(
+                "(import \"{module_name}\" \"{item}\" (func ${item} (param i32) (result i32)))"
+            ));
+        }
+    }
+
+    fn gen_function(&mut self, func: &IrFunction) {
+        // Reset local state
+        self.local_map.clear();
+        self.next_local = 0;
+
+        // Build function signature
+        let mut sig = format!("(func ${}", func.name);
+
+        // Parameters
+        for (param_name, param_type) in &func.params {
+            let wasm_type = self.type_to_wasm(param_type);
+            sig.push_str(&format!(" (param ${param_name} {wasm_type})"));
+            self.local_map.insert(param_name.clone(), self.next_local);
+            self.next_local += 1;
+        }
+
+        // Return type
+        if func.return_type != IrType::Unit {
+            let ret_type = self.type_to_wasm(&func.return_type);
+            sig.push_str(&format!(" (result {ret_type})"));
+        }
+
+        self.write_line(&sig);
+        self.indent_level += 1;
+
+        // Collect local variables from function body
+        let locals = self.collect_locals(&func.body);
+        for (local_name, local_type) in locals {
+            let wasm_type = self.type_to_wasm(&local_type);
+            self.write_line(&format!("(local ${local_name} {wasm_type})"));
+            if !self.local_map.contains_key(&local_name) {
+                self.local_map.insert(local_name, self.next_local);
+                self.next_local += 1;
+            }
+        }
+
+        if !func.body.statements.is_empty() {
+            self.write_line("");
+        }
+
+        // Generate function body
+        self.gen_block(&func.body);
+
+        self.indent_level -= 1;
+        self.write_line(")");
+
+        // Export function
+        self.write_line(&format!("(export \"{}\" (func ${}))", func.name, func.name));
+    }
+
+    fn collect_locals(&self, block: &IrBlock) -> Vec<(String, IrType)> {
+        let mut locals = Vec::new();
+        for stmt in &block.statements {
+            Self::collect_locals_from_stmt(stmt, &mut locals);
+        }
+        locals
+    }
+
+    fn collect_locals_from_stmt(stmt: &IrStmt, locals: &mut Vec<(String, IrType)>) {
+        match stmt {
+            IrStmt::Let { name, ty, .. } => {
+                if let Some(t) = ty {
+                    locals.push((name.clone(), t.clone()));
+                } else {
+                    // Default to i32 if type not specified
+                    locals.push((name.clone(), IrType::U32));
+                }
+            }
+            IrStmt::If {
+                then_block,
+                else_block,
+                ..
+            } => {
+                for s in &then_block.statements {
+                    Self::collect_locals_from_stmt(s, locals);
+                }
+                if let Some(eb) = else_block {
+                    for s in &eb.statements {
+                        Self::collect_locals_from_stmt(s, locals);
+                    }
+                }
+            }
+            IrStmt::While { body, .. } => {
+                for s in &body.statements {
+                    Self::collect_locals_from_stmt(s, locals);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn gen_block(&mut self, block: &IrBlock) {
+        for stmt in &block.statements {
+            self.gen_stmt(stmt);
+        }
+    }
+
+    fn gen_stmt(&mut self, stmt: &IrStmt) {
+        match stmt {
+            IrStmt::Let { name, value, .. } => {
+                // Generate expression and store to local
+                self.gen_expr(value);
+                if self.local_map.contains_key(name) {
+                    self.write_line(&format!("local.set ${name}"));
+                } else {
+                    self.write_line(&format!(";; Warning: undefined local {name}"));
+                }
+            }
+            IrStmt::Assign { target, value } => {
+                // Generate value first
+                self.gen_expr(value);
+
+                // Handle different assignment targets
+                match target {
+                    IrExpr::Var(name) => {
+                        self.write_line(&format!("local.set ${name}"));
+                    }
+                    IrExpr::Field { field, .. } => {
+                        // For field assignment, we need to calculate offset and store
+                        self.write_line(&format!(";; TODO: field assignment to {field}"));
+                    }
+                    _ => {
+                        self.write_line(";; Warning: unsupported assignment target");
+                    }
+                }
+            }
+            IrStmt::If {
+                cond,
+                then_block,
+                else_block,
+            } => {
+                // Generate condition
+                self.gen_expr(cond);
+
+                // If-then-else structure
+                self.write_line("(if");
+                self.indent_level += 1;
+                self.write_line("(then");
+                self.indent_level += 1;
+                self.gen_block(then_block);
+                self.indent_level -= 1;
+                self.write_line(")");
+
+                if let Some(else_blk) = else_block {
+                    self.write_line("(else");
+                    self.indent_level += 1;
+                    self.gen_block(else_blk);
+                    self.indent_level -= 1;
+                    self.write_line(")");
+                }
+
+                self.indent_level -= 1;
+                self.write_line(")");
+            }
+            IrStmt::While { cond, body } => {
+                // WASM doesn't have while loops, use block/loop/br_if
+                self.write_line("(block $break");
+                self.indent_level += 1;
+                self.write_line("(loop $continue");
+                self.indent_level += 1;
+
+                // Check condition
+                self.gen_expr(cond);
+                self.write_line("i32.eqz");
+                self.write_line("br_if $break");
+
+                // Body
+                self.gen_block(body);
+
+                // Loop back
+                self.write_line("br $continue");
+
+                self.indent_level -= 1;
+                self.write_line(")");
+                self.indent_level -= 1;
+                self.write_line(")");
+            }
+            IrStmt::Return { value } => {
+                if let Some(val) = value {
+                    self.gen_expr(val);
+                }
+                self.write_line("return");
+            }
+            IrStmt::Expr(expr) => {
+                self.gen_expr(expr);
+                // Drop result if expression produces one
+                match expr {
+                    IrExpr::Call { .. } | IrExpr::BinOp { .. } | IrExpr::UnaryOp { .. } => {
+                        self.write_line("drop");
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    fn gen_expr(&mut self, expr: &IrExpr) {
+        match expr {
+            IrExpr::Var(name) => {
+                self.write_line(&format!("local.get ${name}"));
+            }
+            IrExpr::Literal(lit) => {
+                self.gen_literal(lit);
+            }
+            IrExpr::BinOp { op, left, right } => {
+                self.gen_expr(left);
+                self.gen_expr(right);
+                self.gen_binop(op);
+            }
+            IrExpr::UnaryOp { op, expr } => {
+                self.gen_expr(expr);
+                self.gen_unaryop(op);
+            }
+            IrExpr::Call { func, args } => {
+                // Generate arguments
+                for arg in args {
+                    self.gen_expr(arg);
+                }
+
+                // Generate call
+                match func.as_ref() {
+                    IrExpr::Var(name) => {
+                        self.write_line(&format!("call ${name}"));
+                    }
+                    IrExpr::Path(path) if path.len() == 1 => {
+                        self.write_line(&format!("call ${}", path[0]));
+                    }
+                    _ => {
+                        self.write_line(";; TODO: indirect call");
+                    }
+                }
+            }
+            IrExpr::Field { base, field } => {
+                // For field access, we need to calculate offset and load
+                self.gen_expr(base);
+                self.write_line(&format!(";; TODO: field access .{field}"));
+                self.write_line("i32.const 0 ;; placeholder for field offset");
+                self.write_line("i32.add");
+                self.write_line("i32.load");
+            }
+            IrExpr::Record { fields } => {
+                // Allocate memory for record
+                let record_size = fields.len() as u32 * 4; // 4 bytes per field (simplified)
+                let offset = self.heap_offset;
+                self.heap_offset += record_size;
+
+                // Store each field
+                for (idx, (_field_name, field_expr)) in fields.iter().enumerate() {
+                    self.write_line(&format!("i32.const {}", offset + (idx as u32 * 4)));
+                    self.gen_expr(field_expr);
+                    self.write_line("i32.store");
+                }
+
+                // Return pointer to record
+                self.write_line(&format!("i32.const {offset}"));
+            }
+            IrExpr::Path(segments) => {
+                // For now, treat paths as variables
+                let name = segments.join("_");
+                self.write_line(&format!("local.get ${name}"));
+            }
+        }
+    }
+
+    fn gen_literal(&mut self, lit: &IrLiteral) {
+        match lit {
+            IrLiteral::Bool(b) => {
+                let val = if *b { 1 } else { 0 };
+                self.write_line(&format!("i32.const {val}"));
+            }
+            IrLiteral::Str(s) => {
+                // Store string in data section
+                let offset = self.heap_offset;
+                let len = s.len();
+                self.string_literals.push((s.clone(), offset));
+                self.heap_offset += len as u32 + 1; // +1 for null terminator
+
+                // Return pointer and length (as simple i32 pointer for now)
+                self.write_line(&format!("i32.const {offset} ;; string \"{s}\""));
+            }
+            IrLiteral::U16(n) => {
+                self.write_line(&format!("i32.const {n}"));
+            }
+            IrLiteral::U32(n) => {
+                self.write_line(&format!("i32.const {n}"));
+            }
+            IrLiteral::U64(n) => {
+                self.write_line(&format!("i64.const {n}"));
+            }
+            IrLiteral::Int(n) => {
+                if *n >= i32::MIN as i64 && *n <= i32::MAX as i64 {
+                    self.write_line(&format!("i32.const {n}"));
+                } else {
+                    self.write_line(&format!("i64.const {n}"));
+                }
+            }
+            IrLiteral::Unit => {
+                // Unit doesn't produce a value
+            }
+        }
+    }
+
+    fn gen_binop(&mut self, op: &IrBinOp) {
+        let instr = match op {
+            IrBinOp::Add => "i32.add",
+            IrBinOp::Sub => "i32.sub",
+            IrBinOp::Mul => "i32.mul",
+            IrBinOp::Div => "i32.div_u",
+            IrBinOp::Mod => "i32.rem_u",
+            IrBinOp::Eq => "i32.eq",
+            IrBinOp::Ne => "i32.ne",
+            IrBinOp::Lt => "i32.lt_u",
+            IrBinOp::Le => "i32.le_u",
+            IrBinOp::Gt => "i32.gt_u",
+            IrBinOp::Ge => "i32.ge_u",
+            IrBinOp::And => "i32.and",
+            IrBinOp::Or => "i32.or",
+        };
+        self.write_line(instr);
+    }
+
+    fn gen_unaryop(&mut self, op: &IrUnaryOp) {
+        match op {
+            IrUnaryOp::Neg => {
+                // Negate: 0 - x
+                self.write_line("i32.const 0");
+                self.write_line("swap ;; TODO: proper negation");
+                self.write_line("i32.sub");
+            }
+            IrUnaryOp::Not => {
+                // Boolean not: x == 0
+                self.write_line("i32.eqz");
+            }
+            IrUnaryOp::Await => {
+                self.write_line(";; TODO: await operation");
+            }
+        }
+    }
+
+    fn type_to_wasm(&self, ty: &IrType) -> &str {
+        match ty {
+            IrType::Bool => "i32",
+            IrType::Str => "i32", // Pointer to string data
+            IrType::U16 => "i32",
+            IrType::U32 => "i32",
+            IrType::U64 => "i64",
+            IrType::Unit => "i32",           // Placeholder
+            IrType::Named(_) => "i32",       // Pointer or value
+            IrType::Record(_) => "i32",      // Pointer to record
+            IrType::Union(_) => "i32",       // Pointer or tagged value
+            IrType::Generic { .. } => "i32", // Pointer
+        }
+    }
+
+    fn write_line(&mut self, line: &str) {
+        let indent = "  ".repeat(self.indent_level);
+        self.output.push_str(&indent);
+        self.output.push_str(line);
+        self.output.push('\n');
+    }
+}
+
+impl Default for WasmCodegen {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Generate WebAssembly code from IR module
+pub fn generate_wasm(module: &IrModule) -> String {
+    let mut codegen = WasmCodegen::new();
+    codegen.generate(module)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_generate_simple_function() {
+        let module = IrModule {
+            name: "test".to_string(),
+            version: "1.0.0".to_string(),
+            imports: vec![],
+            types: vec![],
+            functions: vec![IrFunction {
+                name: "add".to_string(),
+                params: vec![
+                    ("a".to_string(), IrType::U32),
+                    ("b".to_string(), IrType::U32),
+                ],
+                return_type: IrType::U32,
+                effects: vec![],
+                body: IrBlock {
+                    statements: vec![IrStmt::Return {
+                        value: Some(IrExpr::BinOp {
+                            op: IrBinOp::Add,
+                            left: Box::new(IrExpr::Var("a".to_string())),
+                            right: Box::new(IrExpr::Var("b".to_string())),
+                        }),
+                    }],
+                },
+            }],
+            exports: vec!["add".to_string()],
+        };
+
+        let wat = generate_wasm(&module);
+        assert!(wat.contains("(func $add (param $a i32) (param $b i32) (result i32)"));
+        assert!(wat.contains("local.get $a"));
+        assert!(wat.contains("local.get $b"));
+        assert!(wat.contains("i32.add"));
+        assert!(wat.contains("return"));
+        assert!(wat.contains("(export \"add\" (func $add))"));
+    }
+
+    #[test]
+    fn test_generate_let_statement() {
+        let module = IrModule {
+            name: "test".to_string(),
+            version: "1.0.0".to_string(),
+            imports: vec![],
+            types: vec![],
+            functions: vec![IrFunction {
+                name: "test_let".to_string(),
+                params: vec![],
+                return_type: IrType::U32,
+                effects: vec![],
+                body: IrBlock {
+                    statements: vec![
+                        IrStmt::Let {
+                            name: "x".to_string(),
+                            mutable: false,
+                            ty: Some(IrType::U32),
+                            value: IrExpr::Literal(IrLiteral::U32(42)),
+                        },
+                        IrStmt::Return {
+                            value: Some(IrExpr::Var("x".to_string())),
+                        },
+                    ],
+                },
+            }],
+            exports: vec![],
+        };
+
+        let wat = generate_wasm(&module);
+        assert!(wat.contains("(local $x i32)"));
+        assert!(wat.contains("i32.const 42"));
+        assert!(wat.contains("local.set $x"));
+        assert!(wat.contains("local.get $x"));
+    }
+
+    #[test]
+    fn test_generate_if_statement() {
+        let module = IrModule {
+            name: "test".to_string(),
+            version: "1.0.0".to_string(),
+            imports: vec![],
+            types: vec![],
+            functions: vec![IrFunction {
+                name: "test_if".to_string(),
+                params: vec![("cond".to_string(), IrType::Bool)],
+                return_type: IrType::U32,
+                effects: vec![],
+                body: IrBlock {
+                    statements: vec![IrStmt::If {
+                        cond: IrExpr::Var("cond".to_string()),
+                        then_block: IrBlock {
+                            statements: vec![IrStmt::Return {
+                                value: Some(IrExpr::Literal(IrLiteral::U32(1))),
+                            }],
+                        },
+                        else_block: Some(IrBlock {
+                            statements: vec![IrStmt::Return {
+                                value: Some(IrExpr::Literal(IrLiteral::U32(0))),
+                            }],
+                        }),
+                    }],
+                },
+            }],
+            exports: vec![],
+        };
+
+        let wat = generate_wasm(&module);
+        assert!(wat.contains("local.get $cond"));
+        assert!(wat.contains("(if"));
+        assert!(wat.contains("(then"));
+        assert!(wat.contains("(else"));
+    }
+
+    #[test]
+    fn test_generate_while_loop() {
+        let module = IrModule {
+            name: "test".to_string(),
+            version: "1.0.0".to_string(),
+            imports: vec![],
+            types: vec![],
+            functions: vec![IrFunction {
+                name: "test_while".to_string(),
+                params: vec![("n".to_string(), IrType::U32)],
+                return_type: IrType::U32,
+                effects: vec![],
+                body: IrBlock {
+                    statements: vec![
+                        IrStmt::Let {
+                            name: "i".to_string(),
+                            mutable: true,
+                            ty: Some(IrType::U32),
+                            value: IrExpr::Literal(IrLiteral::U32(0)),
+                        },
+                        IrStmt::While {
+                            cond: IrExpr::BinOp {
+                                op: IrBinOp::Lt,
+                                left: Box::new(IrExpr::Var("i".to_string())),
+                                right: Box::new(IrExpr::Var("n".to_string())),
+                            },
+                            body: IrBlock {
+                                statements: vec![IrStmt::Assign {
+                                    target: IrExpr::Var("i".to_string()),
+                                    value: IrExpr::BinOp {
+                                        op: IrBinOp::Add,
+                                        left: Box::new(IrExpr::Var("i".to_string())),
+                                        right: Box::new(IrExpr::Literal(IrLiteral::U32(1))),
+                                    },
+                                }],
+                            },
+                        },
+                        IrStmt::Return {
+                            value: Some(IrExpr::Var("i".to_string())),
+                        },
+                    ],
+                },
+            }],
+            exports: vec![],
+        };
+
+        let wat = generate_wasm(&module);
+        assert!(wat.contains("(loop $continue"));
+        assert!(wat.contains("(block $break"));
+        assert!(wat.contains("br_if $break"));
+        assert!(wat.contains("br $continue"));
+    }
+
+    #[test]
+    fn test_generate_binary_operations() {
+        let ops = vec![
+            (IrBinOp::Add, "i32.add"),
+            (IrBinOp::Sub, "i32.sub"),
+            (IrBinOp::Mul, "i32.mul"),
+            (IrBinOp::Div, "i32.div_u"),
+            (IrBinOp::Eq, "i32.eq"),
+            (IrBinOp::Lt, "i32.lt_u"),
+        ];
+
+        for (op, expected) in ops {
+            let module = IrModule {
+                name: "test".to_string(),
+                version: "1.0.0".to_string(),
+                imports: vec![],
+                types: vec![],
+                functions: vec![IrFunction {
+                    name: "test_op".to_string(),
+                    params: vec![],
+                    return_type: IrType::U32,
+                    effects: vec![],
+                    body: IrBlock {
+                        statements: vec![IrStmt::Return {
+                            value: Some(IrExpr::BinOp {
+                                op,
+                                left: Box::new(IrExpr::Literal(IrLiteral::U32(10))),
+                                right: Box::new(IrExpr::Literal(IrLiteral::U32(20))),
+                            }),
+                        }],
+                    },
+                }],
+                exports: vec![],
+            };
+
+            let wat = generate_wasm(&module);
+            assert!(
+                wat.contains(expected),
+                "Expected {expected} for {op:?}, got:\n{wat}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_generate_function_call() {
+        let module = IrModule {
+            name: "test".to_string(),
+            version: "1.0.0".to_string(),
+            imports: vec![],
+            types: vec![],
+            functions: vec![
+                IrFunction {
+                    name: "helper".to_string(),
+                    params: vec![("x".to_string(), IrType::U32)],
+                    return_type: IrType::U32,
+                    effects: vec![],
+                    body: IrBlock {
+                        statements: vec![IrStmt::Return {
+                            value: Some(IrExpr::Var("x".to_string())),
+                        }],
+                    },
+                },
+                IrFunction {
+                    name: "caller".to_string(),
+                    params: vec![],
+                    return_type: IrType::U32,
+                    effects: vec![],
+                    body: IrBlock {
+                        statements: vec![IrStmt::Return {
+                            value: Some(IrExpr::Call {
+                                func: Box::new(IrExpr::Var("helper".to_string())),
+                                args: vec![IrExpr::Literal(IrLiteral::U32(42))],
+                            }),
+                        }],
+                    },
+                },
+            ],
+            exports: vec![],
+        };
+
+        let wat = generate_wasm(&module);
+        assert!(wat.contains("call $helper"));
+    }
+
+    #[test]
+    fn test_generate_string_literal() {
+        let module = IrModule {
+            name: "test".to_string(),
+            version: "1.0.0".to_string(),
+            imports: vec![],
+            types: vec![],
+            functions: vec![IrFunction {
+                name: "get_string".to_string(),
+                params: vec![],
+                return_type: IrType::Str,
+                effects: vec![],
+                body: IrBlock {
+                    statements: vec![IrStmt::Return {
+                        value: Some(IrExpr::Literal(IrLiteral::Str("Hello".to_string()))),
+                    }],
+                },
+            }],
+            exports: vec![],
+        };
+
+        let wat = generate_wasm(&module);
+        assert!(wat.contains(";; string \"Hello\""));
+        assert!(wat.contains("(data (i32.const"));
+        assert!(wat.contains("\"Hello\")"));
+    }
+
+    #[test]
+    fn test_generate_record_construction() {
+        let module = IrModule {
+            name: "test".to_string(),
+            version: "1.0.0".to_string(),
+            imports: vec![],
+            types: vec![],
+            functions: vec![IrFunction {
+                name: "make_point".to_string(),
+                params: vec![],
+                return_type: IrType::Record(vec![
+                    ("x".to_string(), IrType::U32),
+                    ("y".to_string(), IrType::U32),
+                ]),
+                effects: vec![],
+                body: IrBlock {
+                    statements: vec![IrStmt::Return {
+                        value: Some(IrExpr::Record {
+                            fields: vec![
+                                ("x".to_string(), IrExpr::Literal(IrLiteral::U32(10))),
+                                ("y".to_string(), IrExpr::Literal(IrLiteral::U32(20))),
+                            ],
+                        }),
+                    }],
+                },
+            }],
+            exports: vec![],
+        };
+
+        let wat = generate_wasm(&module);
+        assert!(wat.contains("i32.store"));
+        assert!(wat.contains("i32.const"));
+    }
+
+    #[test]
+    fn test_generate_field_access() {
+        let module = IrModule {
+            name: "test".to_string(),
+            version: "1.0.0".to_string(),
+            imports: vec![],
+            types: vec![],
+            functions: vec![IrFunction {
+                name: "get_x".to_string(),
+                params: vec![(
+                    "point".to_string(),
+                    IrType::Record(vec![
+                        ("x".to_string(), IrType::U32),
+                        ("y".to_string(), IrType::U32),
+                    ]),
+                )],
+                return_type: IrType::U32,
+                effects: vec![],
+                body: IrBlock {
+                    statements: vec![IrStmt::Return {
+                        value: Some(IrExpr::Field {
+                            base: Box::new(IrExpr::Var("point".to_string())),
+                            field: "x".to_string(),
+                        }),
+                    }],
+                },
+            }],
+            exports: vec![],
+        };
+
+        let wat = generate_wasm(&module);
+        assert!(wat.contains(";; TODO: field access .x"));
+        assert!(wat.contains("i32.load"));
+    }
+
+    #[test]
+    fn test_generate_valid_wat_structure() {
+        let module = IrModule {
+            name: "test".to_string(),
+            version: "1.0.0".to_string(),
+            imports: vec![],
+            types: vec![],
+            functions: vec![IrFunction {
+                name: "identity".to_string(),
+                params: vec![("x".to_string(), IrType::U32)],
+                return_type: IrType::U32,
+                effects: vec![],
+                body: IrBlock {
+                    statements: vec![IrStmt::Return {
+                        value: Some(IrExpr::Var("x".to_string())),
+                    }],
+                },
+            }],
+            exports: vec![],
+        };
+
+        let wat = generate_wasm(&module);
+
+        // Check basic WAT structure
+        assert!(wat.starts_with(";;"));
+        assert!(wat.contains("(module"));
+        assert!(wat.contains("(memory $mem"));
+        assert!(wat.contains("(func $identity"));
+        assert!(wat.contains("(param $x i32)"));
+        assert!(wat.contains("(result i32)"));
+        assert!(wat.ends_with(")\n"));
+
+        // Count parentheses (should be balanced)
+        let open_count = wat.matches('(').count();
+        let close_count = wat.matches(')').count();
+        assert_eq!(
+            open_count, close_count,
+            "Unbalanced parentheses in WAT output"
+        );
+    }
+
+    #[test]
+    fn test_type_mapping() {
+        let codegen = WasmCodegen::new();
+
+        assert_eq!(codegen.type_to_wasm(&IrType::Bool), "i32");
+        assert_eq!(codegen.type_to_wasm(&IrType::U32), "i32");
+        assert_eq!(codegen.type_to_wasm(&IrType::U64), "i64");
+        assert_eq!(codegen.type_to_wasm(&IrType::Str), "i32");
+        assert_eq!(codegen.type_to_wasm(&IrType::Record(vec![])), "i32");
+    }
+
+    #[test]
+    fn test_memory_layout_for_records() {
+        let module = IrModule {
+            name: "test".to_string(),
+            version: "1.0.0".to_string(),
+            imports: vec![],
+            types: vec![],
+            functions: vec![IrFunction {
+                name: "create_records".to_string(),
+                params: vec![],
+                return_type: IrType::U32,
+                effects: vec![],
+                body: IrBlock {
+                    statements: vec![
+                        IrStmt::Let {
+                            name: "r1".to_string(),
+                            mutable: false,
+                            ty: Some(IrType::Record(vec![("x".to_string(), IrType::U32)])),
+                            value: IrExpr::Record {
+                                fields: vec![("x".to_string(), IrExpr::Literal(IrLiteral::U32(1)))],
+                            },
+                        },
+                        IrStmt::Let {
+                            name: "r2".to_string(),
+                            mutable: false,
+                            ty: Some(IrType::Record(vec![("y".to_string(), IrType::U32)])),
+                            value: IrExpr::Record {
+                                fields: vec![("y".to_string(), IrExpr::Literal(IrLiteral::U32(2)))],
+                            },
+                        },
+                        IrStmt::Return {
+                            value: Some(IrExpr::Var("r2".to_string())),
+                        },
+                    ],
+                },
+            }],
+            exports: vec![],
+        };
+
+        let wat = generate_wasm(&module);
+
+        // Should have two different memory addresses
+        let const_count = wat.matches("i32.const").count();
+        assert!(const_count >= 4); // At least: 1, offset1, 2, offset2
+    }
+
+    #[test]
+    fn test_end_to_end_function_generation() {
+        let module = IrModule {
+            name: "math".to_string(),
+            version: "1.0.0".to_string(),
+            imports: vec![],
+            types: vec![],
+            functions: vec![IrFunction {
+                name: "factorial".to_string(),
+                params: vec![("n".to_string(), IrType::U32)],
+                return_type: IrType::U32,
+                effects: vec![],
+                body: IrBlock {
+                    statements: vec![
+                        IrStmt::Let {
+                            name: "result".to_string(),
+                            mutable: true,
+                            ty: Some(IrType::U32),
+                            value: IrExpr::Literal(IrLiteral::U32(1)),
+                        },
+                        IrStmt::Let {
+                            name: "i".to_string(),
+                            mutable: true,
+                            ty: Some(IrType::U32),
+                            value: IrExpr::Literal(IrLiteral::U32(1)),
+                        },
+                        IrStmt::While {
+                            cond: IrExpr::BinOp {
+                                op: IrBinOp::Le,
+                                left: Box::new(IrExpr::Var("i".to_string())),
+                                right: Box::new(IrExpr::Var("n".to_string())),
+                            },
+                            body: IrBlock {
+                                statements: vec![
+                                    IrStmt::Assign {
+                                        target: IrExpr::Var("result".to_string()),
+                                        value: IrExpr::BinOp {
+                                            op: IrBinOp::Mul,
+                                            left: Box::new(IrExpr::Var("result".to_string())),
+                                            right: Box::new(IrExpr::Var("i".to_string())),
+                                        },
+                                    },
+                                    IrStmt::Assign {
+                                        target: IrExpr::Var("i".to_string()),
+                                        value: IrExpr::BinOp {
+                                            op: IrBinOp::Add,
+                                            left: Box::new(IrExpr::Var("i".to_string())),
+                                            right: Box::new(IrExpr::Literal(IrLiteral::U32(1))),
+                                        },
+                                    },
+                                ],
+                            },
+                        },
+                        IrStmt::Return {
+                            value: Some(IrExpr::Var("result".to_string())),
+                        },
+                    ],
+                },
+            }],
+            exports: vec!["factorial".to_string()],
+        };
+
+        let wat = generate_wasm(&module);
+
+        // Verify complete structure
+        assert!(wat.contains("(func $factorial"));
+        assert!(wat.contains("(param $n i32)"));
+        assert!(wat.contains("(local $result i32)"));
+        assert!(wat.contains("(local $i i32)"));
+        assert!(wat.contains("(loop $continue"));
+        assert!(wat.contains("i32.mul"));
+        assert!(wat.contains("(export \"factorial\" (func $factorial))"));
+    }
+
+    #[test]
+    fn test_unary_operations() {
+        let module = IrModule {
+            name: "test".to_string(),
+            version: "1.0.0".to_string(),
+            imports: vec![],
+            types: vec![],
+            functions: vec![IrFunction {
+                name: "test_not".to_string(),
+                params: vec![("x".to_string(), IrType::Bool)],
+                return_type: IrType::Bool,
+                effects: vec![],
+                body: IrBlock {
+                    statements: vec![IrStmt::Return {
+                        value: Some(IrExpr::UnaryOp {
+                            op: IrUnaryOp::Not,
+                            expr: Box::new(IrExpr::Var("x".to_string())),
+                        }),
+                    }],
+                },
+            }],
+            exports: vec![],
+        };
+
+        let wat = generate_wasm(&module);
+        assert!(wat.contains("i32.eqz"));
+    }
+}

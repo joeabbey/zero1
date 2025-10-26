@@ -1404,6 +1404,7 @@ dependencies = [
  "anyhow",
  "serde",
  "thiserror",
+ "z1-ir",
 ]
 
 [[package]]
