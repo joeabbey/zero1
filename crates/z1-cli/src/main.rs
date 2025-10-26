@@ -211,6 +211,11 @@ impl From<WarnLevelArg> for diagnostics::WarnLevel {
 }
 
 fn main() -> Result<()> {
+    // Respect NO_COLOR environment variable
+    if std::env::var("NO_COLOR").is_ok() {
+        colored::control::set_override(false);
+    }
+
     tracing_subscriber::fmt::init();
     let cli = Cli::parse();
     match cli.command {
