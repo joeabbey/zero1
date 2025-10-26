@@ -21,7 +21,7 @@ pub enum Type {
     /// Sum type / union (variant label to optional payload type)
     Sum(BTreeMap<Ident, Option<Box<Type>>>),
 
-    /// Generic type application (e.g., List<T>)
+    /// Generic type application (e.g., `List<T>`)
     Generic {
         base: Box<Type>,
         args: Vec<Type>,
