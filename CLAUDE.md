@@ -165,6 +165,256 @@ When multiple independent tasks are available (e.g., M1 has 3 separate tasks):
    - Document known limitations in crate-specific PROGRESS.md files
    - Commit documentation updates separately
 
+### Git Worktrees for Parallel Development
+
+When executing 3+ parallel tasks, use git worktrees to provide complete isolation for each agent. This prevents file conflicts and enables true concurrent development.
+
+#### When to Use Git Worktrees
+
+Use this pattern when:
+- Working on 3+ independent tasks in parallel
+- Each task modifies different crates/modules
+- You want complete isolation between agents
+- You need to test each feature independently
+- Professional feature branch workflow is desired
+
+#### Benefits
+
+1. **Complete Isolation** - Each agent has its own working directory with no file conflicts
+2. **Independent Commits** - No coordination needed between agents during development
+3. **Feature Branch Workflow** - Professional git practice with isolated branches
+4. **Parallel Testing** - Test each feature independently without interference
+5. **Safe Rollback** - Failed work can be discarded without affecting other agents
+6. **Clean Integration** - Merge feature branches sequentially after verification
+
+#### Setup Procedure
+
+**Generic Script Template:**
+
+```bash
+#!/bin/bash
+# setup-parallel-worktrees.sh
+# Usage: ./setup-parallel-worktrees.sh <base-name> <task1> <task2> ...
+# Example: ./setup-parallel-worktrees.sh m4-phase1 stdlib-fs stdlib-crypto stdlib-env
+
+BASE_NAME=$1
+shift
+TASKS=("$@")
+
+echo "Setting up ${#TASKS[@]} parallel worktrees for $BASE_NAME..."
+
+for TASK in "${TASKS[@]}"; do
+  BRANCH="feature/$TASK"
+  WORKTREE="../${BASE_NAME}-${TASK}"
+
+  echo ""
+  echo "Creating worktree for $TASK:"
+  echo "  Branch: $BRANCH"
+  echo "  Path: $WORKTREE"
+
+  # Create feature branch from current HEAD
+  git branch "$BRANCH"
+
+  # Create worktree
+  git worktree add "$WORKTREE" "$BRANCH"
+
+  echo "✓ Ready: cd $WORKTREE && claude"
+done
+
+echo ""
+echo "All worktrees created! Next steps:"
+echo ""
+echo "1. Launch agents in separate terminals:"
+for TASK in "${TASKS[@]}"; do
+  WORKTREE="../${BASE_NAME}-${TASK}"
+  echo "   cd $WORKTREE && claude"
+done
+echo ""
+echo "2. After all agents complete, integrate:"
+echo "   cd <main-repo>"
+echo "   ./integrate-worktrees.sh $BASE_NAME ${TASKS[*]}"
+```
+
+**Integration Script Template:**
+
+```bash
+#!/bin/bash
+# integrate-worktrees.sh
+# Usage: ./integrate-worktrees.sh <base-name> <task1> <task2> ...
+
+BASE_NAME=$1
+shift
+TASKS=("$@")
+
+echo "Integrating ${#TASKS[@]} feature branches..."
+
+# Switch to main branch
+git checkout main
+
+for TASK in "${TASKS[@]}"; do
+  BRANCH="feature/$TASK"
+
+  echo ""
+  echo "Integrating $TASK..."
+
+  # Merge feature branch
+  git merge --no-ff "$BRANCH" -m "feat: merge $TASK from parallel development"
+
+  if [ $? -ne 0 ]; then
+    echo "⚠️  Merge conflict in $TASK - resolve manually"
+    exit 1
+  fi
+
+  echo "✓ Merged $BRANCH"
+done
+
+echo ""
+echo "Running final verification..."
+cargo test --workspace
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+if [ $? -eq 0 ]; then
+  echo ""
+  echo "✓ All integrations successful!"
+  echo ""
+  echo "Cleanup worktrees with:"
+  echo "  ./cleanup-worktrees.sh $BASE_NAME ${TASKS[*]}"
+else
+  echo "⚠️  Tests or clippy failed - fix before cleanup"
+  exit 1
+fi
+```
+
+**Cleanup Script Template:**
+
+```bash
+#!/bin/bash
+# cleanup-worktrees.sh
+# Usage: ./cleanup-worktrees.sh <base-name> <task1> <task2> ...
+
+BASE_NAME=$1
+shift
+TASKS=("$@")
+
+echo "Cleaning up ${#TASKS[@]} worktrees..."
+
+for TASK in "${TASKS[@]}"; do
+  BRANCH="feature/$TASK"
+  WORKTREE="../${BASE_NAME}-${TASK}"
+
+  echo ""
+  echo "Removing worktree: $WORKTREE"
+  git worktree remove "$WORKTREE"
+
+  echo "Deleting branch: $BRANCH"
+  git branch -d "$BRANCH"
+
+  echo "✓ Cleaned up $TASK"
+done
+
+echo ""
+echo "All worktrees cleaned up!"
+```
+
+#### Workflow Example: M4 Phase 1
+
+```bash
+# 1. Create parallel worktrees for 4 independent tasks
+./setup-parallel-worktrees.sh m4-phase1 \
+  stdlib-fs \
+  stdlib-crypto \
+  stdlib-env \
+  enhanced-errors
+
+# 2. Launch agents in separate terminals/sessions
+# Terminal 1:
+cd ../m4-phase1-stdlib-fs && claude
+# Agent prompt: "Implement stdlib/fs module per M4 Phase 1 plan..."
+
+# Terminal 2:
+cd ../m4-phase1-stdlib-crypto && claude
+# Agent prompt: "Implement stdlib/crypto module per M4 Phase 1 plan..."
+
+# Terminal 3:
+cd ../m4-phase1-stdlib-env && claude
+# Agent prompt: "Implement stdlib/env module per M4 Phase 1 plan..."
+
+# Terminal 4:
+cd ../m4-phase1-enhanced-errors && claude
+# Agent prompt: "Add enhanced error messages per M4 Phase 1 plan..."
+
+# 3. Wait for all agents to complete and commit their work
+
+# 4. Integrate all feature branches (from main repo)
+cd zero1
+./integrate-worktrees.sh m4-phase1 \
+  stdlib-fs \
+  stdlib-crypto \
+  stdlib-env \
+  enhanced-errors
+
+# 5. Verify integration
+cargo test --workspace
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+# 6. Clean up worktrees
+./cleanup-worktrees.sh m4-phase1 \
+  stdlib-fs \
+  stdlib-crypto \
+  stdlib-env \
+  enhanced-errors
+
+# 7. Push to remote
+git push origin main
+```
+
+#### Agent Prompt Template for Worktree Development
+
+When deploying agents in worktrees, provide this context:
+
+```
+You are working in a git worktree on feature branch `feature/<task-name>`.
+
+Task: [Describe specific task from plan.md]
+
+Context:
+- This is isolated development - no conflicts with other agents
+- You have your own working directory
+- Commit your work when complete
+- Do NOT push to remote (integration happens in main repo)
+
+Steps:
+1. Read plan.md for task details
+2. Implement feature following CLAUDE.md and AGENTS.md
+3. Write comprehensive tests (minimum X tests)
+4. Run tests: cargo test -p <crate>
+5. Format & lint: cargo fmt --all && cargo clippy
+6. Commit: git add . && git commit -m "feat(<scope>): <message>"
+7. Report completion (do NOT push)
+
+Success Criteria:
+- Feature fully implemented
+- X+ tests passing
+- Clippy clean
+- Code formatted
+- Changes committed to feature branch
+```
+
+#### Choosing Between Worktrees and Direct Parallel Agents
+
+**Use Git Worktrees When:**
+- 3+ parallel tasks
+- Tasks span multiple days
+- Need to pause/resume work
+- Want professional feature branch workflow
+- Tasks might have conflicts in shared files
+
+**Use Direct Parallel Agents (Single Repo) When:**
+- 2-3 quick tasks (< 1 hour each)
+- Tasks are completely independent (different crates)
+- All work can complete in single session
+- Immediate integration desired
+
 ### Example: M1 Parallel Workflow
 
 This pattern was successfully used for M1 (Semantics & Context):
