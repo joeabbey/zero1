@@ -299,6 +299,7 @@ fn test_no_color_output_respected() {
             "--check",
         ])
         .env("NO_COLOR", "1")
+        .env("CARGO_TERM_COLOR", "never")
         .output()
         .expect("Failed to run z1fmt");
 
