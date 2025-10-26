@@ -382,8 +382,8 @@ fn infer_mode(path: Option<&str>) -> z1_fmt::Mode {
     if let Some(path) = path {
         if let Some(ext) = Path::new(path).extension().and_then(|ext| ext.to_str()) {
             return match ext {
-                "z1r" => z1_fmt::Mode::Compact,
-                _ => z1_fmt::Mode::Relaxed,
+                "z1r" => z1_fmt::Mode::Relaxed,
+                _ => z1_fmt::Mode::Compact,
             };
         }
     }

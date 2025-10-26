@@ -1,5 +1,4 @@
 m hello.http:1.0 ctx=256 caps=[net]
-
 u "std/http/server" as H only [createServer, listen, setStatus, setBody, HttpRequest, HttpResponse]
 
 #sym { main: mn }
