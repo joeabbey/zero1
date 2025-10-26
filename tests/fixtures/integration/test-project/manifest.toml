@@ -1,0 +1,19 @@
+[package]
+name = "test-project"
+version = "0.1.0"
+license = "MIT"
+
+[build]
+targets = ["typescript", "wasm"]
+
+[budgets]
+ctx_fn_default = 256
+ctx_cell_default = 512
+
+[capabilities]
+allow = ["net", "time"]
+deny = ["unsafe"]
+
+[provenance]
+inline = true
+required_signers = ["dev:test"]

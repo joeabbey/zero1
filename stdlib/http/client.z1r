@@ -1,0 +1,40 @@
+module std.http.client : 1.0
+  ctx = 256
+  caps = [net]
+
+// SymbolMap: { HttpClient ” C, HttpMethod ” M, get ” g, post ” p, put ” pu, delete ” d, fetch ” ft }
+#sym { HttpClient: C, HttpMethod: M, get: g, post: p, put: pu, delete: d, fetch: ft }
+
+type HttpMethod = GET | POST | PUT | DELETE
+
+type HttpClient = { baseUrl: Str, timeout: U32 }
+
+fn get(url: Str) -> Str
+  eff [net, async]
+{
+  return "";
+}
+
+fn post(url: Str, body: Str) -> Str
+  eff [net, async]
+{
+  return "";
+}
+
+fn put(url: Str, body: Str) -> Str
+  eff [net, async]
+{
+  return "";
+}
+
+fn delete(url: Str) -> Str
+  eff [net, async]
+{
+  return "";
+}
+
+fn fetch(url: Str, method: HttpMethod) -> Str
+  eff [net, async]
+{
+  return "";
+}

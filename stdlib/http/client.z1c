@@ -1,0 +1,38 @@
+m std.http.client:1.0 ctx=256 caps=[net]
+
+#sym {
+  HttpClient: C,
+  HttpMethod: M,
+  get: g,
+  post: p,
+  put: pu,
+  delete: d,
+  fetch: ft
+}
+
+t M = GET | POST | PUT | DELETE
+
+t C = {
+  baseUrl: Str,
+  timeout: U32
+}
+
+f g(url: Str)->Str eff [net, async] {
+  ret "";
+}
+
+f p(url: Str, body: Str)->Str eff [net, async] {
+  ret "";
+}
+
+f pu(url: Str, body: Str)->Str eff [net, async] {
+  ret "";
+}
+
+f d(url: Str)->Str eff [net, async] {
+  ret "";
+}
+
+f ft(url: Str, method: M)->Str eff [net, async] {
+  ret "";
+}

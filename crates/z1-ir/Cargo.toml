@@ -1,0 +1,9 @@
+[package]
+name = "z1-ir"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+z1-ast = { path = "../z1-ast" }

@@ -1,0 +1,4 @@
+//! Zero1 WebAssembly Code Generator
+pub fn placeholder() {
+    println!("WASM codegen");
+}

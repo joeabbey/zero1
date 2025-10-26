@@ -1,0 +1,9 @@
+m hello.world:0.1.0 ctx=64 caps=[]
+
+#sym { greet: g, name: n }
+
+t n = Str
+
+f g(n: n)->Str eff [pure] {
+  ret "Hello";
+}

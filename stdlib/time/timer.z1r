@@ -1,0 +1,78 @@
+module std.time.timer : 1.0
+  ctx = 256
+  caps = [time]
+
+#sym {
+  Timer: Tmr,
+  TimerCallback: CB,
+  create: crt,
+  start: st,
+  stop: stp,
+  reset: rst,
+  elapsed: elp,
+  setTimeout: sto,
+  setInterval: si,
+  clearTimeout: ct,
+  clearInterval: ci
+}
+
+type Timer = {
+  startTime: U64,
+  running: Bool
+}
+
+type TimerCallback = () -> Unit
+
+fn create() -> Timer
+  eff [time]
+{
+  ret Timer{ startTime: 0, running: false };
+}
+
+fn start(timer: Timer) -> Timer
+  eff [time]
+{
+  ret Timer{ startTime: 0, running: true };
+}
+
+fn stop(timer: Timer) -> Timer
+  eff [pure]
+{
+  ret Timer{ startTime: timer.startTime, running: false };
+}
+
+fn reset(timer: Timer) -> Timer
+  eff [time]
+{
+  ret Timer{ startTime: 0, running: timer.running };
+}
+
+fn elapsed(timer: Timer) -> U64
+  eff [time]
+{
+  ret 0;
+}
+
+fn setTimeout(callback: TimerCallback, delayMs: U32) -> U32
+  eff [time, async]
+{
+  ret 0;
+}
+
+fn setInterval(callback: TimerCallback, intervalMs: U32) -> U32
+  eff [time, async]
+{
+  ret 0;
+}
+
+fn clearTimeout(id: U32) -> Unit
+  eff [time]
+{
+  ret ();
+}
+
+fn clearInterval(id: U32) -> Unit
+  eff [time]
+{
+  ret ();
+}

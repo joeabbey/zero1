@@ -23,6 +23,7 @@ z1-typeck = { path = "../z1-typeck" }
 z1-effects = { path = "../z1-effects" }
 z1-hash = { path = "../z1-hash" }
 z1-prov = { path = "../z1-prov" }
+z1-policy = { path = "../z1-policy" }
 z1-codegen-ts = { path = "../z1-codegen-ts" }
 z1-codegen-wasm = { path = "../z1-codegen-wasm" }
 z1-test = { path = "../z1-test" }

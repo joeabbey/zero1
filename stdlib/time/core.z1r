@@ -1,0 +1,104 @@
+module std.time.core : 1.0
+  ctx = 256
+  caps = [time]
+
+#sym {
+  Timestamp: TS,
+  Duration: Dur,
+  DateTime: DT,
+  now: now,
+  nowMillis: nm,
+  sleep: slp,
+  sleepMillis: sm,
+  add: add,
+  subtract: sub,
+  fromMillis: fm,
+  toMillis: tm,
+  format: fmt,
+  parse: prs
+}
+
+type Timestamp = U64
+
+type Duration = {
+  millis: U64
+}
+
+type DateTime = {
+  year: U32,
+  month: U32,
+  day: U32,
+  hour: U32,
+  minute: U32,
+  second: U32,
+  millis: U32
+}
+
+fn now() -> Timestamp
+  eff [time]
+{
+  ret 0;
+}
+
+fn nowMillis() -> U64
+  eff [time]
+{
+  ret 0;
+}
+
+fn sleep(seconds: U32) -> Unit
+  eff [time, async]
+{
+  ret ();
+}
+
+fn sleepMillis(millis: U64) -> Unit
+  eff [time, async]
+{
+  ret ();
+}
+
+fn add(t: Timestamp, d: Duration) -> Timestamp
+  eff [pure]
+{
+  ret t + d.millis;
+}
+
+fn subtract(t: Timestamp, d: Duration) -> Timestamp
+  eff [pure]
+{
+  let result: Timestamp = t - d.millis;
+  ret result;
+}
+
+fn fromMillis(millis: U64) -> Timestamp
+  eff [pure]
+{
+  ret millis;
+}
+
+fn toMillis(t: Timestamp) -> U64
+  eff [pure]
+{
+  ret t;
+}
+
+fn format(dt: DateTime) -> Str
+  eff [pure]
+{
+  ret "";
+}
+
+fn parse(s: Str) -> DateTime
+  eff [pure]
+{
+  ret DateTime{
+    year: 0,
+    month: 0,
+    day: 0,
+    hour: 0,
+    minute: 0,
+    second: 0,
+    millis: 0
+  };
+}

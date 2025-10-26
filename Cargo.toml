@@ -14,6 +14,7 @@ members = [
   "crates/z1-cli",
   "crates/z1-policy",
   "crates/z1-test",
+  "crates/z1-integration-tests",
 ]
 resolver = "2"
 
@@ -42,3 +43,4 @@ colored = "2.1"
 similar = "2.5"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+tempfile = "3.8"

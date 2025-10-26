@@ -1381,6 +1381,7 @@ dependencies = [
  "z1-hash",
  "z1-lex",
  "z1-parse",
+ "z1-policy",
  "z1-prov",
  "z1-test",
  "z1-typeck",
@@ -1393,6 +1394,7 @@ dependencies = [
  "anyhow",
  "serde",
  "thiserror",
+ "z1-ir",
 ]
 
 [[package]]
@@ -1441,6 +1443,20 @@ dependencies = [
  "sha3",
  "z1-ast",
  "z1-parse",
+]
+
+[[package]]
+name = "z1-integration-tests"
+version = "0.1.0"
+dependencies = [
+ "tempfile",
+]
+
+[[package]]
+name = "z1-ir"
+version = "0.1.0"
+dependencies = [
+ "z1-ast",
 ]
 
 [[package]]

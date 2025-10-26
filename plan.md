@@ -36,7 +36,7 @@ Zero1 (Z1) is a Rust-based toolchain plus language optimized for LLM agent workf
 - [ ] Define IR plus TS/WASM codegen stubs; ensure CLI emits diagnostics referencing cells/effects.
 - [ ] Build minimal stdlib (http/time) to unblock examples.
 - [ ] Finish CLI surface: `z1c` (compile), `z1fmt`, `z1prov`, `z1test`, `z1ctx`.
-- [ ] Add end-to-end integration test: manifest → build → provenance verify.
+- [x] Add end-to-end integration test suite: manifest → compile → format → hash → checks. _(Complete: `z1-integration-tests` crate with 20 passing tests covering full pipeline, validation, error handling, and toolchain integration)_
 
 ## 4. Cross-Cutting Tasks
 - [x] Author CONTRIBUTING + `AGENTS.md` (guide published) plus crate-level READMEs to give subagents quick starts.

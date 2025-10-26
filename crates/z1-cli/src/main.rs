@@ -39,6 +39,9 @@ enum Commands {
     /// Run the benchmark harness.
     #[command(alias = "z1bench")]
     Bench(commands::bench::BenchArgs),
+    /// Compile Z1 cell to target language.
+    #[command(alias = "z1c")]
+    Compile(CompileArgs),
 }
 
 #[derive(Debug, Args)]
@@ -123,6 +126,33 @@ struct TestArgs {
     verbose: bool,
 }
 
+#[derive(Debug, Args)]
+struct CompileArgs {
+    /// Path to Z1 cell to compile
+    path: String,
+    /// Output file path (default: same name with target extension)
+    #[arg(short, long)]
+    output: Option<String>,
+    /// Compilation target
+    #[arg(short, long, value_enum, default_value_t = CompileTargetArg::TypeScript)]
+    target: CompileTargetArg,
+    /// Run all checks before compilation
+    #[arg(long, default_value_t = true)]
+    check: bool,
+    /// Emit IR instead of target code
+    #[arg(long)]
+    emit_ir: bool,
+    /// Verbose output
+    #[arg(short, long)]
+    verbose: bool,
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum CompileTargetArg {
+    TypeScript,
+    Wasm,
+}
+
 fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
     let cli = Cli::parse();
@@ -137,7 +167,26 @@ fn main() -> Result<()> {
         Commands::Prov(cmd) => handle_prov(cmd),
         Commands::Test(args) => handle_test(args),
         Commands::Bench(args) => commands::bench::run(args),
+        Commands::Compile(args) => handle_compile(args),
     }
+}
+
+fn handle_compile(args: CompileArgs) -> Result<()> {
+    let target = match args.target {
+        CompileTargetArg::TypeScript => commands::compile::CompileTarget::TypeScript,
+        CompileTargetArg::Wasm => commands::compile::CompileTarget::Wasm,
+    };
+
+    let opts = commands::compile::CompileOptions {
+        input_path: args.path.into(),
+        output_path: args.output.map(Into::into),
+        target,
+        check: args.check,
+        emit_ir: args.emit_ir,
+        verbose: args.verbose,
+    };
+
+    commands::compile::compile(opts)
 }
 
 fn handle_prov(cmd: commands::prov::ProvCommand) -> Result<()> {
