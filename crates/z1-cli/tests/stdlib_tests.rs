@@ -26,7 +26,7 @@ fn read_stdlib_file(path: &str) -> String {
 fn test_http_server_compact_parses() {
     let source = read_stdlib_file("stdlib/http/server.z1c");
     let result = z1_parse::parse_module(&source);
-    assert!(result.is_ok(), "Failed to parse server.z1c: {:?}", result);
+    assert!(result.is_ok(), "Failed to parse server.z1c: {result:?}");
 
     let module = result.unwrap();
     assert_eq!(module.path.0, vec!["std", "http", "server"]);
@@ -39,7 +39,7 @@ fn test_http_server_compact_parses() {
 fn test_http_server_relaxed_parses() {
     let source = read_stdlib_file("stdlib/http/server.z1r");
     let result = z1_parse::parse_module(&source);
-    assert!(result.is_ok(), "Failed to parse server.z1r: {:?}", result);
+    assert!(result.is_ok(), "Failed to parse server.z1r: {result:?}");
 
     let module = result.unwrap();
     assert_eq!(module.path.0, vec!["std", "http", "server"]);
@@ -50,7 +50,7 @@ fn test_http_server_relaxed_parses() {
 fn test_http_client_compact_parses() {
     let source = read_stdlib_file("stdlib/http/client.z1c");
     let result = z1_parse::parse_module(&source);
-    assert!(result.is_ok(), "Failed to parse client.z1c: {:?}", result);
+    assert!(result.is_ok(), "Failed to parse client.z1c: {result:?}");
 
     let module = result.unwrap();
     assert_eq!(module.path.0, vec!["std", "http", "client"]);
@@ -61,7 +61,7 @@ fn test_http_client_compact_parses() {
 fn test_http_client_relaxed_parses() {
     let source = read_stdlib_file("stdlib/http/client.z1r");
     let result = z1_parse::parse_module(&source);
-    assert!(result.is_ok(), "Failed to parse client.z1r: {:?}", result);
+    assert!(result.is_ok(), "Failed to parse client.z1r: {result:?}");
 }
 
 #[test]
@@ -113,7 +113,7 @@ fn test_http_server_has_correct_types() {
         .count();
     assert_eq!(type_count, 3, "Expected 3 type declarations (Req, Res, HS)");
 
-    // Verify type names exist
+    // Verify type names exist (AST uses long names)
     let type_names: Vec<String> = module
         .items
         .iter()
@@ -123,9 +123,9 @@ fn test_http_server_has_correct_types() {
         })
         .collect();
 
-    assert!(type_names.contains(&"Req".to_string()));
-    assert!(type_names.contains(&"Res".to_string()));
-    assert!(type_names.contains(&"HS".to_string()));
+    assert!(type_names.contains(&"HttpRequest".to_string()));
+    assert!(type_names.contains(&"HttpResponse".to_string()));
+    assert!(type_names.contains(&"HttpServer".to_string()));
 }
 
 #[test]
@@ -146,9 +146,9 @@ fn test_listen_function_requires_net_capability() {
     let source = read_stdlib_file("stdlib/http/server.z1c");
     let module = z1_parse::parse_module(&source).unwrap();
 
-    // Find listen function
+    // Find listen function (AST uses long names)
     let listen_fn = module.items.iter().find_map(|item| match item {
-        z1_ast::Item::Fn(f) if f.name == "l" => Some(f),
+        z1_ast::Item::Fn(f) if f.name == "listen" => Some(f),
         _ => None,
     });
 
@@ -171,8 +171,14 @@ fn test_all_pure_functions_marked_correctly() {
     let source = read_stdlib_file("stdlib/http/server.z1c");
     let module = z1_parse::parse_module(&source).unwrap();
 
-    // Functions that should be pure
-    let pure_functions = vec!["cs", "gm", "gp", "ss", "sb"];
+    // Functions that should be pure (AST uses long names)
+    let pure_functions = vec![
+        "createServer",
+        "getMethod",
+        "getPath",
+        "setStatus",
+        "setBody",
+    ];
 
     for fn_name in pure_functions {
         let func = module.items.iter().find_map(|item| match item {
@@ -180,12 +186,11 @@ fn test_all_pure_functions_marked_correctly() {
             _ => None,
         });
 
-        assert!(func.is_some(), "Function {} not found", fn_name);
+        assert!(func.is_some(), "Function {fn_name} not found");
         let func = func.unwrap();
         assert!(
             func.effects.contains(&"pure".to_string()),
-            "Function {} should be marked as pure",
-            fn_name
+            "Function {fn_name} should be marked as pure"
         );
     }
 }
@@ -194,7 +199,10 @@ fn test_all_pure_functions_marked_correctly() {
 fn test_example_application_parses() {
     let source = read_stdlib_file("examples/http-hello/main.z1c");
     let result = z1_parse::parse_module(&source);
-    assert!(result.is_ok(), "Failed to parse example application: {:?}", result);
+    assert!(
+        result.is_ok(),
+        "Failed to parse example application: {result:?}"
+    );
 
     let module = result.unwrap();
     assert_eq!(module.path.0, vec!["hello", "http"]);
@@ -212,7 +220,10 @@ fn test_http_server_functions_count() {
         .filter(|item| matches!(item, z1_ast::Item::Fn(_)))
         .count();
 
-    assert_eq!(fn_count, 7, "Expected 7 function declarations in HTTP server");
+    assert_eq!(
+        fn_count, 7,
+        "Expected 7 function declarations in HTTP server"
+    );
 }
 
 #[test]
@@ -226,7 +237,10 @@ fn test_http_client_functions_count() {
         .filter(|item| matches!(item, z1_ast::Item::Fn(_)))
         .count();
 
-    assert_eq!(fn_count, 5, "Expected 5 function declarations in HTTP client");
+    assert_eq!(
+        fn_count, 5,
+        "Expected 5 function declarations in HTTP client"
+    );
 }
 
 #[test]
@@ -247,8 +261,8 @@ fn test_http_client_all_functions_require_net() {
     let source = read_stdlib_file("stdlib/http/client.z1c");
     let module = z1_parse::parse_module(&source).unwrap();
 
-    // All HTTP client functions should require net capability
-    let client_functions = vec!["g", "p", "pu", "d", "ft"];
+    // All HTTP client functions should require net capability (AST uses long names)
+    let client_functions = vec!["get", "post", "put", "delete", "fetch"];
 
     for fn_name in client_functions {
         let func = module.items.iter().find_map(|item| match item {
@@ -256,17 +270,15 @@ fn test_http_client_all_functions_require_net() {
             _ => None,
         });
 
-        assert!(func.is_some(), "Function {} not found", fn_name);
+        assert!(func.is_some(), "Function {fn_name} not found");
         let func = func.unwrap();
         assert!(
             func.effects.contains(&"net".to_string()),
-            "Function {} should have net effect",
-            fn_name
+            "Function {fn_name} should have net effect"
         );
         assert!(
             func.effects.contains(&"async".to_string()),
-            "Function {} should have async effect",
-            fn_name
+            "Function {fn_name} should have async effect"
         );
     }
 }

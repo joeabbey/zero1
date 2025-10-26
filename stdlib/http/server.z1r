@@ -1,0 +1,53 @@
+module std.http.server : 1.0
+  ctx = 512
+  caps = [net]
+
+#sym { HttpServer: HS, HttpRequest: Req, HttpResponse: Res, listen: l, createServer: cs, sendResponse: sr, getMethod: gm, getPath: gp, setStatus: ss, setBody: sb }
+
+type HttpRequest = { method: Str, path: Str, body: Str }
+
+type HttpResponse = { status: U16, body: Str }
+
+type HttpServer = { port: U16 }
+
+fn createServer(port: U16) -> HttpServer
+  eff [pure]
+{
+  ret HS{ port: port };
+}
+
+fn listen(server: HttpServer) -> Unit
+  eff [net, async]
+{
+  ret ();
+}
+
+fn getMethod(req: HttpRequest) -> Str
+  eff [pure]
+{
+  ret req.method;
+}
+
+fn getPath(req: HttpRequest) -> Str
+  eff [pure]
+{
+  ret req.path;
+}
+
+fn sendResponse(res: HttpResponse) -> Unit
+  eff [net]
+{
+  ret ();
+}
+
+fn setStatus(res: HttpResponse, status: U16) -> HttpResponse
+  eff [pure]
+{
+  ret Res{ status: status, body: res.body };
+}
+
+fn setBody(res: HttpResponse, body: Str) -> HttpResponse
+  eff [pure]
+{
+  ret Res{ status: res.status, body: body };
+}

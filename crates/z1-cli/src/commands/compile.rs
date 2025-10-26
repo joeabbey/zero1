@@ -347,7 +347,7 @@ fn foo(x: U32, y: U32, z: U32) -> U32
         };
 
         let result = compile(opts);
-        assert!(result.is_ok(), "Compilation failed: {:?}", result);
+        assert!(result.is_ok(), "Compilation failed: {result:?}");
         assert!(output.exists(), "Output file was not created");
 
         let content = fs::read_to_string(&output).unwrap();
@@ -371,7 +371,7 @@ fn foo(x: U32, y: U32, z: U32) -> U32
         };
 
         let result = compile(opts);
-        assert!(result.is_ok(), "Compilation failed: {:?}", result);
+        assert!(result.is_ok(), "Compilation failed: {result:?}");
         assert!(output.exists(), "Output file was not created");
 
         let content = fs::read_to_string(&output).unwrap();
@@ -395,7 +395,7 @@ fn foo(x: U32, y: U32, z: U32) -> U32
         };
 
         let result = compile(opts);
-        assert!(result.is_ok(), "Compilation failed: {:?}", result);
+        assert!(result.is_ok(), "Compilation failed: {result:?}");
         assert!(output.exists(), "IR file was not created");
 
         let content = fs::read_to_string(&output).unwrap();
@@ -444,8 +444,7 @@ fn foo(x: U32, y: U32, z: U32) -> U32
                 || err.to_string().contains("Effect check failed")
                 || err.to_string().contains("net")
                 || err.to_string().contains("capability"),
-            "Error message: {}",
-            err
+            "Error message: {err}"
         );
     }
 
@@ -468,8 +467,7 @@ fn foo(x: U32, y: U32, z: U32) -> U32
         assert!(
             err.to_string().contains("Context budget exceeded")
                 || err.to_string().contains("tokens"),
-            "Error message: {}",
-            err
+            "Error message: {err}"
         );
     }
 
@@ -504,8 +502,7 @@ fn f6() -> Unit eff [pure] { ret Unit; }
             err.to_string().contains("Policy")
                 || err.to_string().contains("export")
                 || err.to_string().contains("limit"),
-            "Error message: {}",
-            err
+            "Error message: {err}"
         );
     }
 
@@ -546,7 +543,7 @@ fn f6() -> Unit eff [pure] { ret Unit; }
         };
 
         let result = compile(opts);
-        assert!(result.is_ok(), "Compilation failed: {:?}", result);
+        assert!(result.is_ok(), "Compilation failed: {result:?}");
         assert!(custom_output.exists(), "Custom output file was not created");
     }
 

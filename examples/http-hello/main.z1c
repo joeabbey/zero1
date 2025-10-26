@@ -2,9 +2,9 @@ m hello.http:1.0 ctx=256 caps=[net]
 
 u "std/http/server" as H only [createServer, listen, setStatus, setBody, HttpRequest, HttpResponse]
 
-#sym { main: m }
+#sym { main: mn }
 
-f m()->Unit eff [net, async] {
+f mn()->Unit eff [net, async] {
   let srv: H.HttpServer = H.createServer(8080);
   H.listen(srv);
   ret ();
