@@ -1,0 +1,190 @@
+module example.api.server : 1.0
+  ctx = 1024
+  caps = [net, fs.ro]
+
+use "std/http/server" as http only [HttpRequest, HttpResponse, createServer, listen, getMethod, getPath, setStatus, setBody]
+
+#sym { User: U, UserList: UL, Response: R, Router: Rtr, StatusResponse: SR, handleRequest: hr, routeRequest: rr, handleStatus: hs, handleListUsers: hlu, handleGetUser: hgu, handleCreateUser: hcu, handleUpdateUser: huu, handleDeleteUser: hdu, handleStatic: hst, parseUserId: puid, findUser: fu, createUser: cu, updateUser: uu, deleteUser: du, userToJson: utj, usersToJson: usj, parseUserJson: puj, main: mn }
+
+// User data model
+type User = {
+  id: U32,
+  name: Str,
+  email: Str
+}
+
+// List of users wrapper
+type UserList = {
+  users: Str
+}
+
+// Response type for error handling
+type Response = Ok{ response: http.HttpResponse } | Err{ error: Str }
+
+// Status endpoint response
+type StatusResponse = {
+  ok: Bool,
+  message: Str
+}
+
+// Router state
+type Router = {
+  notFound: Bool
+}
+
+// Parse user ID from path
+fn parseUserId(path: Str) -> U32
+  eff [pure]
+{
+  return 0;
+}
+
+// Find user by ID (stub - would query database)
+fn findUser(id: U32) -> User
+  eff [pure]
+{
+  return User{ id: id, name: "Alice", email: "alice@example.com" };
+}
+
+// Create new user (stub - would insert into database)
+fn createUser(name: Str, email: Str) -> User
+  eff [pure]
+{
+  return User{ id: 1, name: name, email: email };
+}
+
+// Update existing user (stub - would update database)
+fn updateUser(id: U32, name: Str, email: Str) -> User
+  eff [pure]
+{
+  return User{ id: id, name: name, email: email };
+}
+
+// Delete user (stub - would remove from database)
+fn deleteUser(id: U32) -> Bool
+  eff [pure]
+{
+  return true;
+}
+
+// Serialize user to JSON string
+fn userToJson(user: User) -> Str
+  eff [pure]
+{
+  return "";
+}
+
+// Serialize user list to JSON string
+fn usersToJson() -> Str
+  eff [pure]
+{
+  return "";
+}
+
+// Parse JSON string to User
+fn parseUserJson(json: Str) -> User
+  eff [pure]
+{
+  return User{ id: 0, name: "", email: "" };
+}
+
+// GET /api/status - Health check endpoint
+fn handleStatus(req: http.HttpRequest) -> http.HttpResponse
+  eff [pure]
+{
+  let status: StatusResponse = StatusResponse{ ok: true, message: "API Server Running" };
+  let res: http.HttpResponse = http.HttpResponse{ status: 200, body: "" };
+  return http.setBody(res, "");
+}
+
+// GET /api/users - List all users
+fn handleListUsers(req: http.HttpRequest) -> http.HttpResponse
+  eff [pure]
+{
+  let users: Str = usersToJson();
+  let res: http.HttpResponse = http.HttpResponse{ status: 200, body: users };
+  return res;
+}
+
+// GET /api/users/:id - Get user by ID
+fn handleGetUser(req: http.HttpRequest) -> http.HttpResponse
+  eff [pure]
+{
+  let path: Str = http.getPath(req);
+  let userId: U32 = parseUserId(path);
+  let user: User = findUser(userId);
+  let json: Str = userToJson(user);
+  let res: http.HttpResponse = http.HttpResponse{ status: 200, body: json };
+  return res;
+}
+
+// POST /api/users - Create new user
+fn handleCreateUser(req: http.HttpRequest) -> http.HttpResponse
+  eff [pure]
+{
+  let user: User = parseUserJson(req.body);
+  let created: User = createUser(user.name, user.email);
+  let json: Str = userToJson(created);
+  let res: http.HttpResponse = http.HttpResponse{ status: 201, body: json };
+  return res;
+}
+
+// PUT /api/users/:id - Update user
+fn handleUpdateUser(req: http.HttpRequest) -> http.HttpResponse
+  eff [pure]
+{
+  let path: Str = http.getPath(req);
+  let userId: U32 = parseUserId(path);
+  let user: User = parseUserJson(req.body);
+  let updated: User = updateUser(userId, user.name, user.email);
+  let json: Str = userToJson(updated);
+  let res: http.HttpResponse = http.HttpResponse{ status: 200, body: json };
+  return res;
+}
+
+// DELETE /api/users/:id - Delete user
+fn handleDeleteUser(req: http.HttpRequest) -> http.HttpResponse
+  eff [pure]
+{
+  let path: Str = http.getPath(req);
+  let userId: U32 = parseUserId(path);
+  let success: Bool = deleteUser(userId);
+  let res: http.HttpResponse = http.HttpResponse{ status: 204, body: "" };
+  return res;
+}
+
+// GET /static/* - Serve static files
+fn handleStatic(req: http.HttpRequest) -> http.HttpResponse
+  eff [fs]
+{
+  let path: Str = http.getPath(req);
+  let res: http.HttpResponse = http.HttpResponse{ status: 200, body: "" };
+  return res;
+}
+
+// Route incoming request to appropriate handler
+fn routeRequest(req: http.HttpRequest) -> http.HttpResponse
+  eff [fs]
+{
+  let method: Str = http.getMethod(req);
+  let path: Str = http.getPath(req);
+  let notFound: http.HttpResponse = http.HttpResponse{ status: 404, body: "" };
+  return notFound;
+}
+
+// Handle incoming HTTP request
+fn handleRequest(req: http.HttpRequest) -> Unit
+  eff [net, fs]
+{
+  let res: http.HttpResponse = routeRequest(req);
+  return ();
+}
+
+// Main entry point - Start HTTP server
+fn main() -> Unit
+  eff [net, async, fs]
+{
+  let server: http.HttpServer = http.createServer(8080);
+  http.listen(server);
+  return ();
+}

@@ -1,0 +1,116 @@
+m example.api.server:1.0 ctx=1024 caps=[net, fs.ro]
+u "std/http/server" as H only [HttpRequest, HttpResponse, createServer, listen, getMethod, getPath, setStatus, setBody]
+#sym { User: U, UserList: UL, Response: R, Router: Rtr, StatusResponse: SR, handleRequest: hr, routeRequest: rr, handleStatus: hs, handleListUsers: hlu, handleGetUser: hgu, handleCreateUser: hcu, handleUpdateUser: huu, handleDeleteUser: hdu, handleStatic: hst, parseUserId: puid, findUser: fu, createUser: cu, updateUser: uu, deleteUser: du, userToJson: utj, usersToJson: usj, parseUserJson: puj, main: mn }
+
+t U = { id: U32, name: Str, email: Str }
+
+t UL = { users: Str }
+
+t R = Ok{ response: H.HttpResponse } | Err{ error: Str }
+
+t SR = { ok: Bool, message: Str }
+
+t Rtr = { notFound: Bool }
+
+f puid(path: Str)->U32 eff [pure] {
+  ret 0;
+}
+
+f fu(id: U32)->U eff [pure] {
+  ret U{ id: id, name: "Alice", email: "alice@example.com" };
+}
+
+f cu(name: Str, email: Str)->U eff [pure] {
+  ret U{ id: 1, name: name, email: email };
+}
+
+f uu(id: U32, name: Str, email: Str)->U eff [pure] {
+  ret U{ id: id, name: name, email: email };
+}
+
+f du(id: U32)->Bool eff [pure] {
+  ret true;
+}
+
+f utj(user: U)->Str eff [pure] {
+  ret "";
+}
+
+f usj()->Str eff [pure] {
+  ret "";
+}
+
+f puj(json: Str)->U eff [pure] {
+  ret U{ id: 0, name: "", email: "" };
+}
+
+f hs(req: H.HttpRequest)->H.HttpResponse eff [pure] {
+  let status: SR = SR{ ok: true, message: "API Server Running" };
+  let res: H.HttpResponse = H.HttpResponse{ status: 200, body: "" };
+  ret H.setBody(res, "");
+}
+
+f hlu(req: H.HttpRequest)->H.HttpResponse eff [pure] {
+  let users: Str = usj();
+  let res: H.HttpResponse = H.HttpResponse{ status: 200, body: users };
+  ret res;
+}
+
+f hgu(req: H.HttpRequest)->H.HttpResponse eff [pure] {
+  let path: Str = H.getPath(req);
+  let userId: U32 = puid(path);
+  let user: U = fu(userId);
+  let json: Str = utj(user);
+  let res: H.HttpResponse = H.HttpResponse{ status: 200, body: json };
+  ret res;
+}
+
+f hcu(req: H.HttpRequest)->H.HttpResponse eff [pure] {
+  let user: U = puj(req.body);
+  let created: U = cu(user.name, user.email);
+  let json: Str = utj(created);
+  let res: H.HttpResponse = H.HttpResponse{ status: 201, body: json };
+  ret res;
+}
+
+f huu(req: H.HttpRequest)->H.HttpResponse eff [pure] {
+  let path: Str = H.getPath(req);
+  let userId: U32 = puid(path);
+  let user: U = puj(req.body);
+  let updated: U = uu(userId, user.name, user.email);
+  let json: Str = utj(updated);
+  let res: H.HttpResponse = H.HttpResponse{ status: 200, body: json };
+  ret res;
+}
+
+f hdu(req: H.HttpRequest)->H.HttpResponse eff [pure] {
+  let path: Str = H.getPath(req);
+  let userId: U32 = puid(path);
+  let success: Bool = du(userId);
+  let res: H.HttpResponse = H.HttpResponse{ status: 204, body: "" };
+  ret res;
+}
+
+f hst(req: H.HttpRequest)->H.HttpResponse eff [fs] {
+  let path: Str = H.getPath(req);
+  let res: H.HttpResponse = H.HttpResponse{ status: 200, body: "" };
+  ret res;
+}
+
+f rr(req: H.HttpRequest)->H.HttpResponse eff [fs] {
+  let method: Str = H.getMethod(req);
+  let path: Str = H.getPath(req);
+  let notFound: H.HttpResponse = H.HttpResponse{ status: 404, body: "" };
+  ret notFound;
+}
+
+f hr(req: H.HttpRequest)->Unit eff [net, fs] {
+  let res: H.HttpResponse = rr(req);
+  ret ();
+}
+
+f mn()->Unit eff [net, async, fs] {
+  let server: H.HttpServer = H.createServer(8080);
+  H.listen(server);
+  ret ();
+}

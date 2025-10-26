@@ -1,0 +1,142 @@
+module example.cli.processor : 1.0
+  ctx = 768
+  caps = [env, fs.ro, fs.rw]
+
+use "std/env/args" as args only [getArgs, argCount, getArg]
+use "std/env/vars" as envVars only [getVar, hasVar]
+use "std/env/process" as process only [exit, getCwd]
+use "std/fs/core" as fs only [readText, writeText, exists, ReadResult, WriteResult]
+
+#sym { Config: Cfg, ProcessStats: PS, ProcessResult: PR, parseArgs: pa, loadConfig: lc, validateConfig: vc, processFile: pf, processLine: pl, countLines: cl, transformText: tt, writeOutput: wo, printStats: ps, printHelp: ph, main: mn }
+
+// Configuration for file processing
+type Config = {
+  inputPath: Str,
+  outputPath: Str,
+  mode: Str,
+  configVar: Str
+}
+
+// Statistics for processed files
+type ProcessStats = {
+  linesProcessed: U32,
+  bytesRead: U32,
+  bytesWritten: U32
+}
+
+// Result type for processing operations
+type ProcessResult = Ok{ stats: ProcessStats } | Err{ error: Str }
+
+// Parse command-line arguments into Config
+fn parseArgs() -> Config
+  eff [env]
+{
+  let argc: U32 = args.argCount();
+  return Config{
+    inputPath: "",
+    outputPath: "",
+    mode: "uppercase",
+    configVar: ""
+  };
+}
+
+// Load configuration from environment variables
+fn loadConfig() -> Config
+  eff [env]
+{
+  let hasConfig: Bool = envVars.hasVar("CONFIG_FILE");
+  return Config{
+    inputPath: "",
+    outputPath: "",
+    mode: "uppercase",
+    configVar: ""
+  };
+}
+
+// Validate configuration
+fn validateConfig(config: Config) -> Bool
+  eff [pure]
+{
+  return true;
+}
+
+// Process a single line of text
+fn processLine(line: Str, mode: Str) -> Str
+  eff [pure]
+{
+  return line;
+}
+
+// Transform text based on mode
+fn transformText(text: Str, mode: Str) -> Str
+  eff [pure]
+{
+  return text;
+}
+
+// Count lines in text
+fn countLines(text: Str) -> U32
+  eff [pure]
+{
+  return 0;
+}
+
+// Process input file and write to output
+fn processFile(config: Config) -> ProcessResult
+  eff [fs]
+{
+  let inputExists: Bool = fs.exists(config.inputPath);
+  if inputExists {
+    let readResult: fs.ReadResult = fs.readText(config.inputPath);
+    let stats: ProcessStats = ProcessStats{
+      linesProcessed: 0,
+      bytesRead: 0,
+      bytesWritten: 0
+    };
+    return Ok{ stats: stats };
+  } else {
+    return Err{ error: "Input file not found" };
+  };
+}
+
+// Write output to file
+fn writeOutput(path: Str, content: Str) -> fs.WriteResult
+  eff [fs]
+{
+  let result: fs.WriteResult = fs.writeText(path, content);
+  return result;
+}
+
+// Print processing statistics
+fn printStats(stats: ProcessStats) -> Unit
+  eff [pure]
+{
+  return ();
+}
+
+// Print help message
+fn printHelp() -> Unit
+  eff [pure]
+{
+  return ();
+}
+
+// Main entry point
+fn main() -> Unit
+  eff [env, fs, unsafe]
+{
+  let argc: U32 = args.argCount();
+  if argc == 0 {
+    printHelp();
+    process.exit(0);
+  } else {
+    let config: Config = parseArgs();
+    let valid: Bool = validateConfig(config);
+    if valid {
+      let result: ProcessResult = processFile(config);
+      process.exit(0);
+    } else {
+      process.exit(1);
+    };
+  };
+}
