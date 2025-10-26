@@ -1,5 +1,7 @@
 # Zero1 (Z1)
 
+[![CI](https://github.com/joeabbey/zero1/workflows/CI/badge.svg)](https://github.com/joeabbey/zero1/actions)
+
 A Rust-based toolchain and language optimized for LLM agent workflows.
 
 ## Overview

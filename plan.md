@@ -53,13 +53,13 @@ Zero1 (Z1) is a Rust-based toolchain plus language optimized for LLM agent workf
 - [ ] **IR optimizations** - Dead code elimination, constant folding/propagation, inlining. 12+ tests.
 
 #### Phase 3 - Polish & Automation (Week 7)
-- [ ] **CI/CD pipeline** - GitHub Actions with tests, clippy, format checks, documentation builds.
+- [x] **CI/CD pipeline** - GitHub Actions with tests, clippy, format checks, documentation builds. _(Complete: Comprehensive CI workflow with 6 jobs (test, lint, format, docs, examples, security), release workflow with multi-platform binaries, dependabot automation, and full documentation in docs/ci.md; CI badge added to README)_
 - [ ] **WASM binary output** - Integrate `wat2wasm` for direct `.wasm` generation. 5+ tests.
 - [ ] **Improved diagnostics** - Warnings, suggestions, multi-error reporting. 8+ tests.
 
 ## 4. Cross-Cutting Tasks
 - [x] Author CONTRIBUTING + `AGENTS.md` (guide published) plus crate-level READMEs to give subagents quick starts.
-- [ ] Add CI pipeline (fmt, clippy, cargo test, `z1test`) with artifact caching. _(Scheduled for M4 Phase 3)_
+- [x] Add CI pipeline (fmt, clippy, cargo test, `z1test`) with artifact caching. _(Complete: GitHub Actions CI/CD with comprehensive coverage, release automation, and dependency monitoring)_
 - [ ] Create template packs (`examples/http-example/`) for regression; keep snapshots updated. _(Scheduled for M4 Phase 2)_
 - [ ] Track security items: capability audits, SDict handling, provenance replays.
 
