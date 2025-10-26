@@ -1,11 +1,13 @@
-m example.scheduler:1.0 ctx=1024 caps=[time, async]
+m example.scheduler:1.0 ctx=1024 caps=[time,async]
 u "std/time/core" as Time only [now, sleep, Duration, Timestamp]
+
 u "std/time/timer" as Timer only [create, start, stop, reset, elapsed, Timer]
+
 #sym { Task: Tsk, TaskStatus: TS, TaskPriority: TP, ScheduledTask: ST, TaskScheduler: Sched, createTask: ct, scheduleOnce: so, scheduleRecurring: sr, cancelTask: can, runScheduler: rs, executeTask: et, checkTask: chk, main: mn }
 
-t TS = Pending | Running | Completed | Failed{ error: Str }
+t TS = Pending
 
-t TP = High | Normal | Low
+t TP = High
 
 t Tsk = { id: U64, name: Str, priority: TP, status: TS }
 
