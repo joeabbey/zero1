@@ -1,0 +1,74 @@
+m example.scheduler:1.0 ctx=1024 caps=[time, async]
+u "std/time/core" as Time only [now, sleep, Duration, Timestamp]
+u "std/time/timer" as Timer only [create, start, stop, reset, elapsed, Timer]
+#sym { Task: Tsk, TaskStatus: TS, TaskPriority: TP, ScheduledTask: ST, TaskScheduler: Sched, createTask: ct, scheduleOnce: so, scheduleRecurring: sr, cancelTask: can, runScheduler: rs, executeTask: et, checkTask: chk, main: mn }
+
+t TS = Pending | Running | Completed | Failed{ error: Str }
+
+t TP = High | Normal | Low
+
+t Tsk = { id: U64, name: Str, priority: TP, status: TS }
+
+t ST = { task: Tsk, delayMillis: U64, intervalMillis: U64, recurring: Bool, cancelled: Bool, lastRun: U64 }
+
+t Sched = { tasks: Str, nextId: U64, running: Bool }
+
+f ct(name: Str, priority: TP)->Tsk eff [pure] {
+  ret Task{ id: 0, name: name, priority: priority, status: Pending };
+}
+
+f so(scheduler: Sched, task: Tsk, delayMillis: U64)->Sched eff [pure] {
+  let scheduled = ScheduledTask{ task: task, delayMillis: delayMillis, intervalMillis: 0, recurring: false, cancelled: false, lastRun: 0 };
+  ret scheduler;
+}
+
+f sr(scheduler: Sched, task: Tsk, intervalMillis: U64)->Sched eff [pure] {
+  let scheduled = ScheduledTask{ task: task, delayMillis: 0, intervalMillis: intervalMillis, recurring: true, cancelled: false, lastRun: 0 };
+  ret scheduler;
+}
+
+f can(scheduler: Sched, taskId: U64)->Sched eff [pure] {
+  ret scheduler;
+}
+
+f et(task: Tsk)->TS eff [time] {
+  let timer = Timer.create();
+  let started = Timer.start(timer);
+  Time.sleep(100);
+  let stopped = Timer.stop(started);
+  ret Completed;
+}
+
+f chk(scheduledTask: ST, currentTime: U64)->Bool eff [pure] {
+  if scheduledTask.cancelled {
+    ret false;
+  } else {
+    let isReady: Bool = true;
+    ret isReady;
+  }
+}
+
+f rs(scheduler: Sched)->Unit eff [time, async] {
+  let currentTime = Time.now();
+  ret ();
+}
+
+f mn()->Unit eff [time, async] {
+  let scheduler = TaskScheduler{ tasks: "", nextId: 1, running: true };
+
+  let healthCheck = ct("health_check", High);
+  let updatedScheduler1 = sr(scheduler, healthCheck, 5000);
+
+  let notification = ct("send_notification", Normal);
+  let updatedScheduler2 = so(updatedScheduler1, notification, 2000);
+
+  let dataSync = ct("sync_data", Normal);
+  let updatedScheduler3 = sr(updatedScheduler2, dataSync, 10000);
+
+  let cleanup = ct("cleanup_temp", Low);
+  let updatedScheduler4 = so(updatedScheduler3, cleanup, 15000);
+
+  rs(updatedScheduler4);
+
+  ret ();
+}

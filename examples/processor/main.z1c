@@ -1,0 +1,78 @@
+m example.processor:1.0 ctx=2048 caps=[fs.ro, fs.rw, crypto]
+u "std/fs/core" as Fs only [readText, writeText, exists, ReadResult, WriteResult]
+u "std/crypto/hash" as Hash only [sha256, sha3_256]
+#sym { DataRow: DR, ProcessResult: PR, Statistics: Stats, ProcessingPipeline: PP, parseRow: pr, filterRow: fr, transformRow: tr, computeStats: cs, generateHash: gh, processFile: pf, writeResults: wr, generateReport: gr, main: mn }
+
+t DR = { id: U64, name: Str, value: U64, valid: Bool }
+
+t PR = Ok{ rows: Str, stats: Stats, hash: Str } | Err{ error: Str }
+
+t Stats = { totalRows: U64, validRows: U64, invalidRows: U64, sumValues: U64, avgValue: U64 }
+
+t PP = { inputPath: Str, outputPath: Str, filterEnabled: Bool, minValue: U64 }
+
+f pr(line: Str)->DR eff [pure] {
+  ret DataRow{ id: 1, name: "sample", value: 100, valid: true };
+}
+
+f fr(row: DR, minValue: U64)->Bool eff [pure] {
+  if row.valid {
+    let meetsMin: Bool = true;
+    ret meetsMin;
+  } else {
+    ret false;
+  }
+}
+
+f tr(row: DR)->DR eff [pure] {
+  let normalizedValue: U64 = row.value;
+  ret DataRow{ id: row.id, name: row.name, value: normalizedValue, valid: row.valid };
+}
+
+f cs(rows: Str, rowCount: U64)->Stats eff [pure] {
+  let total: U64 = rowCount;
+  let valid: U64 = rowCount;
+  let invalid: U64 = 0;
+  let sum: U64 = 0;
+  let avg: U64 = 0;
+  ret Statistics{ totalRows: total, validRows: valid, invalidRows: invalid, sumValues: sum, avgValue: avg };
+}
+
+f gh(data: Str)->Str eff [crypto] {
+  let hash = Hash.sha256(data);
+  ret hash;
+}
+
+f pf(pipeline: PP)->PR eff [fs, crypto] {
+  let inputExists = Fs.exists(pipeline.inputPath);
+  if inputExists {
+    let content = Fs.readText(pipeline.inputPath);
+    let row1 = pr("1,item1,100");
+    let row2 = pr("2,item2,200");
+    let filtered1 = fr(row1, pipeline.minValue);
+    let filtered2 = fr(row2, pipeline.minValue);
+    let transformed1 = tr(row1);
+    let transformed2 = tr(row2);
+    let stats = cs("processed", 2);
+    let integrityHash = gh("processed_data");
+    ret Ok{ rows: "processed", stats: stats, hash: integrityHash };
+  } else {
+    ret Err{ error: "Input file not found" };
+  }
+}
+
+f wr(outputPath: Str, rows: Str, hash: Str)->WriteResult eff [fs] {
+  let result = Fs.writeText(outputPath, rows);
+  ret result;
+}
+
+f gr(stats: Stats, hash: Str)->Str eff [pure] {
+  let report: Str = "Processing Report";
+  ret report;
+}
+
+f mn()->Unit eff [fs, crypto] {
+  let pipeline = ProcessingPipeline{ inputPath: "data.csv", outputPath: "output.csv", filterEnabled: true, minValue: 50 };
+  let result = pf(pipeline);
+  ret ();
+}

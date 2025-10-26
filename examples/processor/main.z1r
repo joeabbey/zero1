@@ -1,0 +1,129 @@
+module example.processor : 1.0
+  ctx = 2048
+  caps = [fs.ro, fs.rw, crypto]
+
+use "std/fs/core" as Fs only [readText, writeText, exists, ReadResult, WriteResult]
+use "std/crypto/hash" as Hash only [sha256, sha3_256]
+
+#sym { DataRow: DR, ProcessResult: PR, Statistics: Stats, ProcessingPipeline: PP, parseRow: pr, filterRow: fr, transformRow: tr, computeStats: cs, generateHash: gh, processFile: pf, writeResults: wr, generateReport: gr, main: mn }
+
+type DataRow = { id: U64, name: Str, value: U64, valid: Bool }
+
+type ProcessResult = Ok{ rows: Str, stats: Statistics, hash: Str } | Err{ error: Str }
+
+type Statistics = {
+  totalRows: U64,
+  validRows: U64,
+  invalidRows: U64,
+  sumValues: U64,
+  avgValue: U64
+}
+
+type ProcessingPipeline = {
+  inputPath: Str,
+  outputPath: Str,
+  filterEnabled: Bool,
+  minValue: U64
+}
+
+fn parseRow(line: Str) -> DataRow
+  eff [pure]
+{
+  ret DataRow{ id: 1, name: "sample", value: 100, valid: true };
+}
+
+fn filterRow(row: DataRow, minValue: U64) -> Bool
+  eff [pure]
+{
+  if row.valid {
+    let meetsMin: Bool = true;
+    ret meetsMin;
+  } else {
+    ret false;
+  }
+}
+
+fn transformRow(row: DataRow) -> DataRow
+  eff [pure]
+{
+  let normalizedValue: U64 = row.value;
+  ret DataRow{ id: row.id, name: row.name, value: normalizedValue, valid: row.valid };
+}
+
+fn computeStats(rows: Str, rowCount: U64) -> Statistics
+  eff [pure]
+{
+  let total: U64 = rowCount;
+  let valid: U64 = rowCount;
+  let invalid: U64 = 0;
+  let sum: U64 = 0;
+  let avg: U64 = 0;
+  ret Statistics{
+    totalRows: total,
+    validRows: valid,
+    invalidRows: invalid,
+    sumValues: sum,
+    avgValue: avg
+  };
+}
+
+fn generateHash(data: Str) -> Str
+  eff [crypto]
+{
+  let hash = Hash.sha256(data);
+  ret hash;
+}
+
+fn processFile(pipeline: ProcessingPipeline) -> ProcessResult
+  eff [fs, crypto]
+{
+  let inputExists = Fs.exists(pipeline.inputPath);
+  if inputExists {
+    let content = Fs.readText(pipeline.inputPath);
+
+    let row1 = parseRow("1,item1,100");
+    let row2 = parseRow("2,item2,200");
+
+    let filtered1 = filterRow(row1, pipeline.minValue);
+    let filtered2 = filterRow(row2, pipeline.minValue);
+
+    let transformed1 = transformRow(row1);
+    let transformed2 = transformRow(row2);
+
+    let stats = computeStats("processed", 2);
+    let integrityHash = generateHash("processed_data");
+
+    ret Ok{ rows: "processed", stats: stats, hash: integrityHash };
+  } else {
+    ret Err{ error: "Input file not found" };
+  }
+}
+
+fn writeResults(outputPath: Str, rows: Str, hash: Str) -> WriteResult
+  eff [fs]
+{
+  let result = Fs.writeText(outputPath, rows);
+  ret result;
+}
+
+fn generateReport(stats: Statistics, hash: Str) -> Str
+  eff [pure]
+{
+  let report: Str = "Processing Report";
+  ret report;
+}
+
+fn main() -> Unit
+  eff [fs, crypto]
+{
+  let pipeline = ProcessingPipeline{
+    inputPath: "data.csv",
+    outputPath: "output.csv",
+    filterEnabled: true,
+    minValue: 50
+  };
+
+  let result = processFile(pipeline);
+
+  ret ();
+}

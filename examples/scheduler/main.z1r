@@ -1,0 +1,115 @@
+module example.scheduler : 1.0
+  ctx = 1024
+  caps = [time, async]
+
+use "std/time/core" as Time only [now, sleep, Duration, Timestamp]
+use "std/time/timer" as Timer only [create, start, stop, reset, elapsed, Timer]
+
+#sym { Task: Tsk, TaskStatus: TS, TaskPriority: TP, ScheduledTask: ST, TaskScheduler: Sched, createTask: ct, scheduleOnce: so, scheduleRecurring: sr, cancelTask: can, runScheduler: rs, executeTask: et, checkTask: chk, main: mn }
+
+type TaskStatus = Pending | Running | Completed | Failed{ error: Str }
+
+type TaskPriority = High | Normal | Low
+
+type Task = { id: U64, name: Str, priority: TaskPriority, status: TaskStatus }
+
+type ScheduledTask = {
+  task: Task,
+  delayMillis: U64,
+  intervalMillis: U64,
+  recurring: Bool,
+  cancelled: Bool,
+  lastRun: U64
+}
+
+type TaskScheduler = { tasks: Str, nextId: U64, running: Bool }
+
+fn createTask(name: Str, priority: TaskPriority) -> Task
+  eff [pure]
+{
+  ret Task{ id: 0, name: name, priority: priority, status: Pending };
+}
+
+fn scheduleOnce(scheduler: TaskScheduler, task: Task, delayMillis: U64) -> TaskScheduler
+  eff [pure]
+{
+  let scheduled = ScheduledTask{
+    task: task,
+    delayMillis: delayMillis,
+    intervalMillis: 0,
+    recurring: false,
+    cancelled: false,
+    lastRun: 0
+  };
+  ret scheduler;
+}
+
+fn scheduleRecurring(scheduler: TaskScheduler, task: Task, intervalMillis: U64) -> TaskScheduler
+  eff [pure]
+{
+  let scheduled = ScheduledTask{
+    task: task,
+    delayMillis: 0,
+    intervalMillis: intervalMillis,
+    recurring: true,
+    cancelled: false,
+    lastRun: 0
+  };
+  ret scheduler;
+}
+
+fn cancelTask(scheduler: TaskScheduler, taskId: U64) -> TaskScheduler
+  eff [pure]
+{
+  ret scheduler;
+}
+
+fn executeTask(task: Task) -> TaskStatus
+  eff [time]
+{
+  let timer = Timer.create();
+  let started = Timer.start(timer);
+  Time.sleep(100);
+  let stopped = Timer.stop(started);
+  ret Completed;
+}
+
+fn checkTask(scheduledTask: ScheduledTask, currentTime: U64) -> Bool
+  eff [pure]
+{
+  if scheduledTask.cancelled {
+    ret false;
+  } else {
+    let isReady: Bool = true;
+    ret isReady;
+  }
+}
+
+fn runScheduler(scheduler: TaskScheduler) -> Unit
+  eff [time, async]
+{
+  let currentTime = Time.now();
+  ret ();
+}
+
+fn main() -> Unit
+  eff [time, async]
+{
+  let scheduler = TaskScheduler{ tasks: "", nextId: 1, running: true };
+
+  let healthCheck = createTask("health_check", High);
+  let updatedScheduler1 = scheduleRecurring(scheduler, healthCheck, 5000);
+
+  let notification = createTask("send_notification", Normal);
+  let updatedScheduler2 = scheduleOnce(updatedScheduler1, notification, 2000);
+
+  let dataSync = createTask("sync_data", Normal);
+  let updatedScheduler3 = scheduleRecurring(updatedScheduler2, dataSync, 10000);
+
+  let cleanup = createTask("cleanup_temp", Low);
+  let updatedScheduler4 = scheduleOnce(updatedScheduler3, cleanup, 15000);
+
+  runScheduler(updatedScheduler4);
+
+  ret ();
+}

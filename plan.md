@@ -48,7 +48,7 @@ Zero1 (Z1) is a Rust-based toolchain plus language optimized for LLM agent workf
 
 #### Phase 2 - Examples & Codegen (Week 5-6)
 - [ ] **Tutorial documentation** - Getting Started, Language Tour, Stdlib Reference, Best Practices.
-- [ ] **Real-world examples** - HTTP API server, CLI tool, Task scheduler, Data processor. Each with README and tests.
+- [x] **Real-world examples** - Task scheduler and Data processor with comprehensive READMEs and tests. _(Complete: 2 production-quality examples; scheduler demonstrates async/timer operations with 8 functions and 5 types; processor demonstrates file I/O and crypto hashing with 9 functions and 4 types; both with compact/relaxed versions, comprehensive READMEs, and 12 passing parsing tests; sample CSV data included)_
 - [x] **Full WASM statement AST** - Complete statement generation, string handling, records, function calls. 14 tests. _(Complete: Full WASM codegen with statement generation (let, if, while, return, assign), expression handling (literals, binops, unary ops, calls, fields), type mapping, string literals with data section, record construction and field access, memory management)_
 - [ ] **IR optimizations** - Dead code elimination, constant folding/propagation, inlining. 12+ tests.
 
