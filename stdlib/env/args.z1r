@@ -1,0 +1,38 @@
+module std.env.args : 1.0
+  ctx = 256
+  caps = [env]
+
+// SymbolMap: { Args ↔ Args, getArgs ↔ ga, parseFlags ↔ pf, hasFlag ↔ hf, getArg ↔ garg, argCount ↔ ac }
+#sym { Args: Args, getArgs: ga, parseFlags: pf, hasFlag: hf, getArg: garg, argCount: ac }
+
+type Args = { values: Str }
+
+fn getArgs() -> Str
+  eff [env]
+{
+  ret "";
+}
+
+fn parseFlags(args: Str) -> Str
+  eff [pure]
+{
+  ret "";
+}
+
+fn hasFlag(args: Str, flag: Str) -> Bool
+  eff [pure]
+{
+  ret false;
+}
+
+fn getArg(index: U32) -> Str
+  eff [env]
+{
+  ret "";
+}
+
+fn argCount() -> U32
+  eff [env]
+{
+  ret 0;
+}

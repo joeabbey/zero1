@@ -1,0 +1,24 @@
+m std.env.args:1.0 ctx=256 caps=[env]
+#sym { Args: Args, getArgs: ga, parseFlags: pf, hasFlag: hf, getArg: garg, argCount: ac }
+
+t Args = { values: Str }
+
+f ga()->Str eff [env] {
+  ret "";
+}
+
+f pf(args: Str)->Str eff [pure] {
+  ret "";
+}
+
+f hf(args: Str, flag: Str)->Bool eff [pure] {
+  ret false;
+}
+
+f garg(index: U32)->Str eff [env] {
+  ret "";
+}
+
+f ac()->U32 eff [env] {
+  ret 0;
+}

@@ -1,0 +1,20 @@
+m std.env.process:1.0 ctx=256 caps=[env]
+#sym { ProcessInfo: PI, exit: ex, getPid: gp, getCwd: gc, getExecPath: ge }
+
+t PI = { pid: U32, cwd: Str }
+
+f ex(code: U32)->Unit eff [env, unsafe] {
+  ret ();
+}
+
+f gp()->U32 eff [env] {
+  ret 0;
+}
+
+f gc()->Str eff [env] {
+  ret "";
+}
+
+f ge()->Str eff [env] {
+  ret "";
+}

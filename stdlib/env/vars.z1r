@@ -1,0 +1,38 @@
+module std.env.vars : 1.0
+  ctx = 256
+  caps = [env]
+
+// SymbolMap: { EnvVar ↔ EV, getVar ↔ gv, setVar ↔ sv, allVars ↔ av, hasVar ↔ hv, removeVar ↔ rv }
+#sym { EnvVar: EV, getVar: gv, setVar: sv, allVars: av, hasVar: hv, removeVar: rv }
+
+type EnvVar = { key: Str, value: Str }
+
+fn getVar(name: Str) -> Str
+  eff [env]
+{
+  ret "";
+}
+
+fn setVar(name: Str, value: Str) -> Unit
+  eff [env]
+{
+  ret ();
+}
+
+fn allVars() -> Str
+  eff [env]
+{
+  ret "";
+}
+
+fn hasVar(name: Str) -> Bool
+  eff [env]
+{
+  ret false;
+}
+
+fn removeVar(name: Str) -> Unit
+  eff [env]
+{
+  ret ();
+}

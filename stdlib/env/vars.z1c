@@ -1,0 +1,24 @@
+m std.env.vars:1.0 ctx=256 caps=[env]
+#sym { EnvVar: EV, getVar: gv, setVar: sv, allVars: av, hasVar: hv, removeVar: rv }
+
+t EV = { key: Str, value: Str }
+
+f gv(name: Str)->Str eff [env] {
+  ret "";
+}
+
+f sv(name: Str, value: Str)->Unit eff [env] {
+  ret ();
+}
+
+f av()->Str eff [env] {
+  ret "";
+}
+
+f hv(name: Str)->Bool eff [env] {
+  ret false;
+}
+
+f rv(name: Str)->Unit eff [env] {
+  ret ();
+}

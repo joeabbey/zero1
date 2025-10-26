@@ -1,0 +1,32 @@
+module std.env.process : 1.0
+  ctx = 256
+  caps = [env]
+
+// SymbolMap: { ProcessInfo ↔ PI, exit ↔ ex, getPid ↔ gp, getCwd ↔ gc, getExecPath ↔ ge }
+#sym { ProcessInfo: PI, exit: ex, getPid: gp, getCwd: gc, getExecPath: ge }
+
+type ProcessInfo = { pid: U32, cwd: Str }
+
+fn exit(code: U32) -> Unit
+  eff [env, unsafe]
+{
+  ret ();
+}
+
+fn getPid() -> U32
+  eff [env]
+{
+  ret 0;
+}
+
+fn getCwd() -> Str
+  eff [env]
+{
+  ret "";
+}
+
+fn getExecPath() -> Str
+  eff [env]
+{
+  ret "";
+}

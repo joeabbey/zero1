@@ -1,0 +1,24 @@
+m example.config:1.0 ctx=512 caps=[env]
+u "std/env/vars" as Env only [getVar, hasVar]
+u "std/env/args" as Args only [getArgs, argCount]
+u "std/env/process" as Proc only [getPid, getCwd, exit]
+#sym { Config: Cfg, loadConfig: lc, validateConfig: vc, main: m }
+
+t Cfg = { apiKey: Str, environment: Str, port: U32, debug: Bool }
+
+f lc()->Cfg eff [env] {
+  let apiKey: Str = Env.getVar("API_KEY");
+  let environment: Str = Env.getVar("ENV");
+  let debugValue: Str = Env.getVar("DEBUG");
+  ret Cfg{ apiKey: apiKey, environment: environment, port: 8080, debug: false };
+}
+
+f vc(config: Cfg)->Bool eff [pure] {
+  ret true;
+}
+
+f m()->Unit eff [env, unsafe] {
+  let config: Cfg = lc();
+  let valid: Bool = vc(config);
+  if valid { ret (); } else { Proc.exit(1); };
+}

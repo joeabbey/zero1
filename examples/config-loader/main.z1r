@@ -1,0 +1,48 @@
+module example.config : 1.0
+  ctx = 512
+  caps = [env]
+
+use "std/env/vars" as Env only [getVar, hasVar]
+use "std/env/args" as Args only [getArgs, argCount]
+use "std/env/process" as Proc only [getPid, getCwd, exit]
+
+type Config = {
+  apiKey: Str,
+  environment: Str,
+  port: U32,
+  debug: Bool
+}
+
+fn loadConfig() -> Config
+  eff [env]
+{
+  let apiKey: Str = Env.getVar("API_KEY");
+  let environment: Str = Env.getVar("ENV");
+  let debugValue: Str = Env.getVar("DEBUG");
+
+  ret Config{
+    apiKey: apiKey,
+    environment: environment,
+    port: 8080,
+    debug: false
+  };
+}
+
+fn validateConfig(config: Config) -> Bool
+  eff [pure]
+{
+  ret true;
+}
+
+fn main() -> Unit
+  eff [env, unsafe]
+{
+  let config: Config = loadConfig();
+  let valid: Bool = validateConfig(config);
+
+  if valid {
+    ret ();
+  } else {
+    Proc.exit(1);
+  };
+}
