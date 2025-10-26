@@ -221,9 +221,9 @@ impl<'a> Parser<'a> {
         self.expect(TokenKind::LBrace, "opening { in symbol map")?;
         let mut pairs = Vec::new();
         while !self.at(TokenKind::RBrace) && !self.at(TokenKind::Eof) {
-            let long = self.expect(TokenKind::Ident, "long identifier")?;
+            let long = self.expect_ident_or_keyword("long identifier")?;
             self.expect(TokenKind::Colon, ": between long/short identifiers")?;
-            let short = self.expect(TokenKind::Ident, "short identifier")?;
+            let short = self.expect_ident_or_keyword("short identifier")?;
             let span = Span::new(long.span.start, short.span.end);
             pairs.push(SymbolPair {
                 long: long.lexeme,
@@ -247,7 +247,7 @@ impl<'a> Parser<'a> {
 
     fn parse_type_decl(&mut self) -> Result<TypeDecl, ParseError> {
         let start = self.expect(TokenKind::KwType, "type keyword")?.span;
-        let name = self.expect(TokenKind::Ident, "type name")?;
+        let name = self.expect_ident_or_keyword("type name")?;
         self.expect(TokenKind::Eq, "equals in type declaration")?;
         let expr = self.parse_type_expr()?;
         if self.at(TokenKind::Semi) {
@@ -309,7 +309,7 @@ impl<'a> Parser<'a> {
 
     fn parse_fn_decl(&mut self) -> Result<FnDecl, ParseError> {
         let start = self.expect(TokenKind::KwFn, "fn keyword")?.span;
-        let name = self.expect(TokenKind::Ident, "function name")?;
+        let name = self.expect_ident_or_keyword("function name")?;
         self.expect(TokenKind::LParen, "opening ( in parameter list")?;
         let params = self.parse_params()?;
         self.expect(TokenKind::RParen, "closing ) in parameter list")?;
@@ -337,7 +337,7 @@ impl<'a> Parser<'a> {
             let name = if self.at(TokenKind::RParen) {
                 break;
             } else {
-                self.expect(TokenKind::Ident, "parameter name")?
+                self.expect_ident_or_keyword("parameter name")?
             };
             self.expect(TokenKind::Colon, ": after parameter name")?;
             let ty = self.parse_type_expr()?;
@@ -415,6 +415,37 @@ impl<'a> Parser<'a> {
                 found: self.peek().kind,
                 span: self.peek().span,
             })
+        }
+    }
+
+    /// Accept either an identifier or a keyword token as an identifier
+    /// This is needed in contexts like symbol maps where keywords can be used as names
+    fn expect_ident_or_keyword(&mut self, expected: &'static str) -> Result<Token, ParseError> {
+        let token = self.peek();
+        match token.kind {
+            TokenKind::Ident
+            | TokenKind::KwModule
+            | TokenKind::KwUse
+            | TokenKind::KwType
+            | TokenKind::KwFn
+            | TokenKind::KwReturn
+            | TokenKind::KwLet
+            | TokenKind::KwIf
+            | TokenKind::KwElse
+            | TokenKind::KwWhile
+            | TokenKind::KwCaps
+            | TokenKind::KwAs
+            | TokenKind::KwOnly
+            | TokenKind::KwCtx
+            | TokenKind::KwEff
+            | TokenKind::KwMut
+            | TokenKind::KwTrue
+            | TokenKind::KwFalse => Ok(self.advance()),
+            _ => Err(ParseError::Unexpected {
+                expected,
+                found: token.kind,
+                span: token.span,
+            }),
         }
     }
 
