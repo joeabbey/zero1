@@ -38,10 +38,29 @@ Zero1 (Z1) is a Rust-based toolchain plus language optimized for LLM agent workf
 - [ ] Finish CLI surface: `z1c` (compile), `z1fmt`, `z1prov`, `z1test`, `z1ctx`.
 - [x] Add end-to-end integration test suite: manifest → compile → format → hash → checks. _(Complete: `z1-integration-tests` crate with 20 passing tests covering full pipeline, validation, error handling, and toolchain integration)_
 
+### M4 – Ecosystem & Production Readiness (Week 4‑7)
+
+#### Phase 1 - Foundation (Week 4) 🚧
+- [ ] **stdlib/fs** - File system operations (read, write, directories, paths). Requires `fs.ro`/`fs.rw` capabilities. 15+ tests.
+- [ ] **stdlib/crypto** - Cryptographic operations (SHA-256, SHA3, HMAC, random). Requires `crypto` capability. 12+ tests.
+- [ ] **stdlib/env** - Environment & process (env vars, args, exit). Requires `env` capability. 10+ tests.
+- [ ] **Enhanced error messages** - Add source spans to all errors, pretty-print with snippets, color-coded output. 10+ tests.
+
+#### Phase 2 - Examples & Codegen (Week 5-6)
+- [ ] **Tutorial documentation** - Getting Started, Language Tour, Stdlib Reference, Best Practices.
+- [ ] **Real-world examples** - HTTP API server, CLI tool, Task scheduler, Data processor. Each with README and tests.
+- [ ] **Full WASM statement AST** - Complete statement generation, string handling, records, function calls. 15+ tests.
+- [ ] **IR optimizations** - Dead code elimination, constant folding/propagation, inlining. 12+ tests.
+
+#### Phase 3 - Polish & Automation (Week 7)
+- [ ] **CI/CD pipeline** - GitHub Actions with tests, clippy, format checks, documentation builds.
+- [ ] **WASM binary output** - Integrate `wat2wasm` for direct `.wasm` generation. 5+ tests.
+- [ ] **Improved diagnostics** - Warnings, suggestions, multi-error reporting. 8+ tests.
+
 ## 4. Cross-Cutting Tasks
 - [x] Author CONTRIBUTING + `AGENTS.md` (guide published) plus crate-level READMEs to give subagents quick starts.
-- [ ] Add CI pipeline (fmt, clippy, cargo test, `z1test`) with artifact caching.
-- [ ] Create template packs (`examples/http-example/`) for regression; keep snapshots updated.
+- [ ] Add CI pipeline (fmt, clippy, cargo test, `z1test`) with artifact caching. _(Scheduled for M4 Phase 3)_
+- [ ] Create template packs (`examples/http-example/`) for regression; keep snapshots updated. _(Scheduled for M4 Phase 2)_
 - [ ] Track security items: capability audits, SDict handling, provenance replays.
 
 ## 5. Progress Tracking Guidance
