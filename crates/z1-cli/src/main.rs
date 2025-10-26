@@ -143,6 +143,9 @@ struct CompileArgs {
     /// Emit IR instead of target code
     #[arg(long)]
     emit_ir: bool,
+    /// Optimization level (0=none, 1=basic, 2=aggressive)
+    #[arg(short = 'O', long, value_enum, default_value_t = OptLevelArg::O1)]
+    opt_level: OptLevelArg,
     /// Verbose output
     #[arg(short, long)]
     verbose: bool,
@@ -152,6 +155,23 @@ struct CompileArgs {
 enum CompileTargetArg {
     TypeScript,
     Wasm,
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum OptLevelArg {
+    O0,
+    O1,
+    O2,
+}
+
+impl From<OptLevelArg> for z1_ir::optimize::OptLevel {
+    fn from(value: OptLevelArg) -> Self {
+        match value {
+            OptLevelArg::O0 => z1_ir::optimize::OptLevel::O0,
+            OptLevelArg::O1 => z1_ir::optimize::OptLevel::O1,
+            OptLevelArg::O2 => z1_ir::optimize::OptLevel::O2,
+        }
+    }
 }
 
 fn main() -> Result<()> {
@@ -184,6 +204,7 @@ fn handle_compile(args: CompileArgs) -> Result<()> {
         target,
         check: args.check,
         emit_ir: args.emit_ir,
+        opt_level: args.opt_level.into(),
         verbose: args.verbose,
     };
 

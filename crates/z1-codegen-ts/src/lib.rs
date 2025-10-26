@@ -348,6 +348,17 @@ pub fn generate_typescript(module: &IrModule) -> String {
     codegen.generate(module)
 }
 
+/// Generate TypeScript code from IR module with optimization
+pub fn generate_typescript_optimized(
+    module: &IrModule,
+    opt_level: z1_ir::optimize::OptLevel,
+) -> String {
+    let mut optimized = module.clone();
+    z1_ir::optimize::optimize(&mut optimized, opt_level);
+    let mut codegen = TsCodegen::new();
+    codegen.generate(&optimized)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

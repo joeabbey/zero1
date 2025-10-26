@@ -4,6 +4,8 @@
 //! optimized for code generation. The IR eliminates syntactic sugar and
 //! normalizes the AST into a form that's easier to compile to target languages.
 
+pub mod optimize;
+
 use z1_ast as ast;
 
 /// IR Module - compiled representation of a Z1 cell

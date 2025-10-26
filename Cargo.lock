@@ -1379,6 +1379,7 @@ dependencies = [
  "z1-effects",
  "z1-fmt",
  "z1-hash",
+ "z1-ir",
  "z1-lex",
  "z1-parse",
  "z1-policy",

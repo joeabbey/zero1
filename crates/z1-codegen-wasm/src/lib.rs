@@ -479,6 +479,14 @@ pub fn generate_wasm(module: &IrModule) -> String {
     codegen.generate(module)
 }
 
+/// Generate WebAssembly code from IR module with optimization
+pub fn generate_wasm_optimized(module: &IrModule, opt_level: z1_ir::optimize::OptLevel) -> String {
+    let mut optimized = module.clone();
+    z1_ir::optimize::optimize(&mut optimized, opt_level);
+    let mut codegen = WasmCodegen::new();
+    codegen.generate(&optimized)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
