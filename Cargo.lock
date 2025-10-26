@@ -1459,6 +1459,7 @@ dependencies = [
  "tempfile",
  "tracing",
  "tracing-subscriber",
+ "wasmparser 0.118.2",
  "z1-ast",
  "z1-codegen-ts",
  "z1-codegen-wasm",

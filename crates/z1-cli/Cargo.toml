@@ -34,3 +34,4 @@ chrono.workspace = true
 
 [dev-dependencies]
 tempfile = "3.8"
+wasmparser = "0.118"
