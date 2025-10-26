@@ -1,0 +1,30 @@
+module demo.time : 1.0
+  ctx = 256
+  caps = [time]
+
+use "std/time/core" as Time only [now, nowMillis, sleep, add, subtract, Duration, Timestamp]
+use "std/time/timer" as Timer only [create, start, elapsed, Timer]
+
+#sym { main: mn, benchmark: bnch }
+
+fn benchmark() -> U64
+  eff [time]
+{
+  let timer = Timer.create();
+  let started = Timer.start(timer);
+  let result = Timer.elapsed(started);
+  ret result;
+}
+
+fn main() -> Unit
+  eff [time, async]
+{
+  let start = Time.now();
+  Time.sleep(1);
+  let end = Time.now();
+  
+  let dur = Duration{ millis: 1000 };
+  let later = Time.add(start, dur);
+  
+  ret ();
+}

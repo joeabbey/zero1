@@ -58,16 +58,16 @@ fn sleepMillis(millis: U64) -> Unit
   ret ();
 }
 
-fn add(t: Timestamp, d: Duration) -> Timestamp
+fn add(ts: Timestamp, dur: Duration) -> Timestamp
   eff [pure]
 {
-  ret t + d.millis;
+  ret ts + dur.millis;
 }
 
-fn subtract(t: Timestamp, d: Duration) -> Timestamp
+fn subtract(ts: Timestamp, dur: Duration) -> Timestamp
   eff [pure]
 {
-  let result: Timestamp = t - d.millis;
+  let result: Timestamp = ts - dur.millis;
   ret result;
 }
 
@@ -77,13 +77,13 @@ fn fromMillis(millis: U64) -> Timestamp
   ret millis;
 }
 
-fn toMillis(t: Timestamp) -> U64
+fn toMillis(ts: Timestamp) -> U64
   eff [pure]
 {
-  ret t;
+  ret ts;
 }
 
-fn format(dt: DateTime) -> Str
+fn format(datetime: DateTime) -> Str
   eff [pure]
 {
   ret "";

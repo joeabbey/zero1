@@ -1479,6 +1479,7 @@ dependencies = [
  "thiserror",
  "z1-ast",
  "z1-fmt",
+ "z1-hash",
  "z1-lex",
 ]
 

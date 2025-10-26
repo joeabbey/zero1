@@ -1,0 +1,24 @@
+m std.time.timer:1.0 ctx=256 caps=[time]
+#sym { Timer: Tmr, create: crt, start: st, stop: stp, reset: rst, elapsed: elp }
+
+t Tmr = { startTime: U64, running: Bool }
+
+f crt()->Tmr eff [time] {
+  ret Timer{ startTime: 0, running: false };
+}
+
+f st(timer: Tmr)->Tmr eff [time] {
+  ret Timer{ startTime: 0, running: true };
+}
+
+f stp(timer: Tmr)->Tmr eff [pure] {
+  ret Timer{ startTime: timer.startTime, running: false };
+}
+
+f rst(timer: Tmr)->Tmr eff [time] {
+  ret Timer{ startTime: 0, running: timer.running };
+}
+
+f elp(timer: Tmr)->U64 eff [time] {
+  ret 0;
+}

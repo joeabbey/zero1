@@ -1,0 +1,57 @@
+m std.time.core:1.0 ctx=256 caps=[time]
+#sym { Timestamp: TS, Duration: Dur, DateTime: DT, now: now, nowMillis: nm, sleep: slp, sleepMillis: sm, add: add, subtract: sub, fromMillis: fm, toMillis: tm, format: fmt, parse: prs }
+
+t TS = U64
+
+t Dur = { millis: U64 }
+
+t DT = { year: U32, month: U32, day: U32, hour: U32, minute: U32, second: U32, millis: U32 }
+
+f now()->TS eff [time] {
+  ret 0;
+}
+
+f nm()->U64 eff [time] {
+  ret 0;
+}
+
+f slp(seconds: U32)->Unit eff [time, async] {
+  ret ();
+}
+
+f sm(millis: U64)->Unit eff [time, async] {
+  ret ();
+}
+
+f add(ts: TS, dur: Dur)->TS eff [pure] {
+  ret ts + dur.millis;
+}
+
+f sub(ts: TS, dur: Dur)->TS eff [pure] {
+  let result: Timestamp = ts - dur.millis;
+  ret result;
+}
+
+f fm(millis: U64)->TS eff [pure] {
+  ret millis;
+}
+
+f tm(ts: TS)->U64 eff [pure] {
+  ret ts;
+}
+
+f fmt(datetime: DT)->Str eff [pure] {
+  ret "";
+}
+
+f prs(s: Str)->DT eff [pure] {
+  ret DateTime{
+    year: 0,
+    month: 0,
+    day: 0,
+    hour: 0,
+    minute: 0,
+    second: 0,
+    millis: 0
+  };
+}
