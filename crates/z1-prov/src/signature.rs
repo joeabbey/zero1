@@ -2,18 +2,18 @@
 
 use crate::types::{ProvenanceEntry, Signature};
 use ed25519_dalek::{Signer, SigningKey, Verifier, VerifyingKey};
-use rand::rngs::OsRng;
 use sha3::{Digest, Sha3_256};
 
 /// Generate a new Ed25519 keypair.
 ///
 /// Returns (private_key_bytes, public_key_bytes).
 pub fn keygen() -> ([u8; 32], [u8; 32]) {
-    let mut csprng = OsRng;
-    let signing_key = SigningKey::generate(&mut csprng);
-    let verifying_key = signing_key.verifying_key();
+    // Generate 32 random bytes for the private key using getrandom
+    let mut private_bytes = [0u8; 32];
+    getrandom::fill(&mut private_bytes).expect("failed to generate random bytes");
 
-    let private_bytes = signing_key.to_bytes();
+    let signing_key = SigningKey::from_bytes(&private_bytes);
+    let verifying_key = signing_key.verifying_key();
     let public_bytes = verifying_key.to_bytes();
 
     (private_bytes, public_bytes)

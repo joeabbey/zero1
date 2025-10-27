@@ -63,7 +63,7 @@ fn ensure_cli_built() {
         let release_path = target_dir.join("release").join("z1-cli");
 
         eprintln!("=== Binary location check ===");
-        eprintln!("Looking for binary at: {:?}", bin_path);
+        eprintln!("Looking for binary at: {bin_path:?}");
         eprintln!("Debug path exists: {}", debug_path.exists());
         eprintln!("Release path exists: {}", release_path.exists());
 

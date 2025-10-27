@@ -93,18 +93,36 @@ For each task, follow this cycle:
    cargo clippy --workspace --all-targets --all-features -- -D warnings
    ```
 
-5. **Document** - Update relevant docs (crate README, PROGRESS.md if needed)
+5. **Pre-Commit Verification** - **MANDATORY BEFORE EVERY COMMIT**
+   ```bash
+   # Run ALL workspace tests to catch integration issues
+   cargo test --workspace
 
-6. **Update plan.md** - Mark task complete with brief summary including test count
+   # Verify clippy passes on all targets
+   cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+   # If either command fails, FIX THE ISSUES before committing
+   ```
+
+   **Why this is critical:**
+   - Dependency updates can break other crates (e.g., version conflicts)
+   - Changes in one crate can affect tests in other crates
+   - Clippy warnings can indicate real bugs
+   - CI failures waste time and require fix commits
+   - Local testing is faster than waiting for CI
+
+6. **Document** - Update relevant docs (crate README, PROGRESS.md if needed)
+
+7. **Update plan.md** - Mark task complete with brief summary including test count
    - Example: "_(Complete: `z1-typeck` crate with 24 passing tests)_"
 
-7. **Commit**
+8. **Commit** - Only after all tests pass and clippy is clean
    ```bash
    git add <files>
    git commit -m "feat(scope): descriptive message"
    ```
 
-8. **Push** - `git push origin main`
+9. **Push** - `git push origin main`
 
 ### Parallel Development Pattern
 
@@ -315,14 +333,15 @@ Results:
 
 1. **Always use TodoWrite** for complex tasks to track progress
 2. **Write tests as you code** - not after, and make them meaningful
-3. **Update plan.md immediately** when tasks complete (include test count)
-4. **Keep commits atomic** - one logical change per commit
-5. **Test before committing** - never commit failing tests or empty tests
-6. **Review test quality** - would these tests catch real bugs?
-7. **Remove obsolete tests** - if a test no longer serves a purpose, delete it
-8. **Document limitations** - MVP is OK if documented
-9. **Push frequently** - after each complete task
-10. **Clean git history** - descriptive messages, no WIP commits
+3. **Run full workspace tests BEFORE committing** - `cargo test --workspace && cargo clippy --workspace --all-targets --all-features -- -D warnings`
+4. **Update plan.md immediately** when tasks complete (include test count)
+5. **Keep commits atomic** - one logical change per commit
+6. **Never commit without testing** - dependency changes can break other crates
+7. **Review test quality** - would these tests catch real bugs?
+8. **Remove obsolete tests** - if a test no longer serves a purpose, delete it
+9. **Document limitations** - MVP is OK if documented
+10. **Push frequently** - after each complete task (but only after local tests pass)
+11. **Clean git history** - descriptive messages, no WIP commits
 
 ### Test Quality Guidelines
 
