@@ -30,7 +30,7 @@ thiserror = "2.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 toml = "0.8"
-logos = "0.13"
+logos = "0.15"
 rowan = "0.15"
 camino = "1.1"
 sha3 = "0.10"
