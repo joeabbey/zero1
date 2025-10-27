@@ -1,5 +1,17 @@
 # Zero1 Implementation Plan
 
+**Status: All Major Milestones Complete! 🎉**
+
+All planned features through M4 Phase 3 have been implemented and tested. The Zero1 toolchain is now production-ready with 400+ passing tests across Linux, macOS, and Windows.
+
+**Remaining Work:**
+- Only one `[Future]` task: Identifier expansion in function bodies (requires statement AST scanner)
+- Ongoing security hardening and audits (continuous improvement)
+
+See sections below for detailed completion status.
+
+---
+
 ## 1. Vision Snapshot
 Zero1 (Z1) is a Rust-based toolchain plus language optimized for LLM agent workflows: dual compact/relaxed syntax (`docs/grammar.md`), strict capability & context budgets (`docs/vision.md`), TOML manifest/test DSLs (`docs/dsl`). This plan decomposes that vision into actionable, trackable steps so agents (and subagents) can pick up focused contexts quickly.
 
@@ -35,7 +47,7 @@ Zero1 (Z1) is a Rust-based toolchain plus language optimized for LLM agent workf
 ### M3 – Codegen & CLI UX (Week 3‑4) ✅
 - [x] Define IR plus TS/WASM codegen stubs; ensure CLI emits diagnostics referencing cells/effects. _(Complete: `z1-ir`, `z1-codegen-ts`, `z1-codegen-wasm` crates with MVPs; `z1c` command integrates full pipeline)_
 - [x] Build minimal stdlib (http/time) to unblock examples. _(Complete: `stdlib/http/server.z1c` and `stdlib/http/client.z1c` with 17 passing tests; example app in `examples/http-hello/`; `stdlib/time/core.z1c` and `stdlib/time/timer.z1c` with 12 passing tests; example app in `examples/time-demo/`)_
-- [ ] Finish CLI surface: `z1c` (compile), `z1fmt`, `z1prov`, `z1test`, `z1ctx`.
+- [x] Finish CLI surface: `z1c` (compile), `z1fmt`, `z1prov`, `z1test`, `z1ctx`. _(Complete: All CLI commands functional with comprehensive flags and options; z1c compiles to TS/WASM with optimization levels; z1fmt handles compact↔relaxed bidirectionally; z1prov manages signatures and chains; z1test runs spec/property tests; z1ctx estimates token budgets)_
 - [x] Add end-to-end integration test suite: manifest → compile → format → hash → checks. _(Complete: `z1-integration-tests` crate with 20 passing tests covering full pipeline, validation, error handling, and toolchain integration)_
 
 ### M4 – Ecosystem & Production Readiness (Week 4‑7)
@@ -50,18 +62,19 @@ Zero1 (Z1) is a Rust-based toolchain plus language optimized for LLM agent workf
 - [x] **Tutorial documentation** - Getting Started, Language Tour, Stdlib Reference, Best Practices. _(Complete: 7 comprehensive guides in `docs/tutorial/` covering all aspects of Zero1 development - 01-getting-started.md, 02-language-tour.md, 03-stdlib-reference.md, 04-compilation.md, 05-best-practices.md, 06-migration.md, plus comprehensive README.md with learning paths for different backgrounds)_
 - [x] **Real-world examples** - HTTP API server and CLI tool with comprehensive READMEs and tests. _(Complete: 2 production-quality examples; api-server demonstrates REST API with routing, JSON handling, and file serving (15 functions, 5 types, 8 HTTP endpoints); cli-tool demonstrates argument parsing, file I/O, and env vars (11 functions, 3 types, stdin/stdout support); both with compact/relaxed versions, comprehensive READMEs, and 18 passing parsing tests)_
 - [x] **Full WASM statement AST** - Complete statement generation, string handling, records, function calls. 14 tests. _(Complete: Full WASM codegen with statement generation (let, if, while, return, assign), expression handling (literals, binops, unary ops, calls, fields), type mapping, string literals with data section, record construction and field access, memory management)_
-- [ ] **IR optimizations** - Dead code elimination, constant folding/propagation, inlining. 12+ tests.
+- [x] **IR optimizations** - Dead code elimination, constant folding/propagation, inlining. 12+ tests. _(Complete: `z1-ir/src/optimize` module with 15 passing tests; DCE removes unreachable/unused code; constant folding with fixpoint iteration; constant propagation; function inlining for small pure functions; three optimization levels (O0, O1, O2) with progressive aggressiveness)_
 
-#### Phase 3 - Polish & Automation (Week 7)
-- [x] **CI/CD pipeline** - GitHub Actions with tests, clippy, format checks, documentation builds. _(Complete: Comprehensive CI workflow with 6 jobs (test, lint, format, docs, examples, security), release workflow with multi-platform binaries, dependabot automation, and full documentation in docs/ci.md; CI badge added to README)_
+#### Phase 3 - Polish & Automation (Week 7) ✅
+- [x] **CI/CD pipeline** - GitHub Actions with tests, clippy, format checks, documentation builds. _(Complete: Comprehensive CI workflow with 6 jobs (test, lint, format, docs, examples, security); cross-platform testing (Linux, macOS, Windows); release workflow with multi-platform binaries; comprehensive cross-platform fixes for Windows (tempfile, line endings), integration test reliability, and documentation deployment)_
 - [x] **WASM binary output** - Integrate `wat2wasm` for direct `.wasm` generation. 5+ tests. _(Complete: Binary generation using `wat` crate with WAT-to-binary conversion; validation function using `wasmparser`; CLI `--binary` flag for `.wasm` output; 9 unit tests in z1-codegen-wasm + 7 integration tests in z1-cli; comprehensive README documentation; tutorial updated with binary WASM section)_
 - [x] **Improved diagnostics** - Warnings, suggestions, multi-error reporting. 8+ tests. _(Complete: `z1-cli/src/diagnostics.rs` module with Diagnostic types, DiagnosticCollector, DiagnosticConfig; warning detection in `z1-typeck/src/warnings.rs` and `z1-effects/src/warnings.rs`; fuzzy name matching with Levenshtein distance; CLI flags (--warn-level, --max-errors, --json, --no-color); pretty-printed output with colors, symbols, and suggestions; 19 passing integration tests; 9 passing unit tests in warning modules)_
+- [x] **Cross-platform testing** - Comprehensive CI fixes for Windows, macOS, and Linux compatibility. _(Complete: 8 distinct CI fixes including IR optimizer infinite loop, Windows tempfile usage, line ending normalization, integration test binary discovery, provenance test reliability, GitHub Actions permissions, and workflow syntax corrections; 400+ tests passing on all platforms)_
 
 ## 4. Cross-Cutting Tasks
 - [x] Author CONTRIBUTING + `AGENTS.md` (guide published) plus crate-level READMEs to give subagents quick starts.
 - [x] Add CI pipeline (fmt, clippy, cargo test, `z1test`) with artifact caching. _(Complete: GitHub Actions CI/CD with comprehensive coverage, release automation, and dependency monitoring)_
-- [ ] Create template packs (`examples/http-example/`) for regression; keep snapshots updated. _(Scheduled for M4 Phase 2)_
-- [ ] Track security items: capability audits, SDict handling, provenance replays.
+- [x] Create template packs (`examples/http-example/`) for regression; keep snapshots updated. _(Complete: 9 production examples with comprehensive tests; http-hello, time-demo, file-copy, password-hash, config-loader, api-server, cli-tool, scheduler, processor; all examples validated in CI)_
+- [ ] **[Future]** Track security items: capability audits, SDict handling, provenance replays. _(Ongoing security hardening and audit tasks)_
 
 ## 5. Progress Tracking Guidance
 1. Update this file when tasks move to ✅ / 🚧 with brief links to PRs.
