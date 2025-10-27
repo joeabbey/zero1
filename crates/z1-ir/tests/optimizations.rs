@@ -48,8 +48,16 @@ fn test_dce_eliminates_unused_variable() {
     let stats = optimize(&mut module, OptLevel::O2);
 
     assert!(stats.dead_code_eliminated > 0);
-    // Only 2 statements should remain (let used + return)
-    assert_eq!(module.functions[0].body.statements.len(), 2);
+    // After DCE and constant propagation, only return statement remains
+    // (the 'let used = 42' is propagated and then eliminated as unused)
+    assert_eq!(module.functions[0].body.statements.len(), 1);
+    // Verify the return uses the propagated constant
+    match &module.functions[0].body.statements[0] {
+        IrStmt::Return {
+            value: Some(IrExpr::Literal(IrLiteral::U32(42))),
+        } => (),
+        _ => panic!("Expected return with propagated constant 42"),
+    }
 }
 
 #[test]
@@ -158,8 +166,15 @@ fn test_dce_removes_empty_blocks() {
 
     optimize(&mut module, OptLevel::O2);
 
-    // Should optimize without errors
-    assert_eq!(module.functions[0].body.statements.len(), 2);
+    // After optimization, constant propagation and DCE reduce to just the return
+    // (let x = 10 is propagated and eliminated)
+    assert_eq!(module.functions[0].body.statements.len(), 1);
+    match &module.functions[0].body.statements[0] {
+        IrStmt::Return {
+            value: Some(IrExpr::Literal(IrLiteral::U32(10))),
+        } => (),
+        _ => panic!("Expected return with propagated constant 10"),
+    }
 }
 
 // ===== Constant Folding Tests =====
@@ -270,8 +285,9 @@ fn test_const_propagation() {
     let stats = optimize(&mut module, OptLevel::O2);
 
     assert!(stats.constants_folded > 0);
-    // x should be propagated to 42
-    match &module.functions[0].body.statements[1] {
+    // After constant propagation and DCE, only return remains with propagated value
+    assert_eq!(module.functions[0].body.statements.len(), 1);
+    match &module.functions[0].body.statements[0] {
         IrStmt::Return {
             value: Some(IrExpr::Literal(IrLiteral::U32(42))),
         } => (),

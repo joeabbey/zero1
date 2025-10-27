@@ -123,7 +123,12 @@ fn fold_constants_in_stmt(
                     let mut then_map = const_map.clone();
                     let mut new_then = then_block.clone();
                     folded_count += fold_constants_in_block(&mut new_then, &mut then_map);
-                    folded_count += 1; // Count the if simplification
+
+                    // Only count as a simplification if we actually removed the else block
+                    let simplified = else_block.is_some();
+                    if simplified {
+                        folded_count += 1;
+                    }
 
                     // Return the then block statements inline
                     // For now, keep the if structure but mark it as optimizable
@@ -139,7 +144,12 @@ fn fold_constants_in_stmt(
                         let mut else_map = const_map.clone();
                         let mut new_else = else_blk.clone();
                         folded_count += fold_constants_in_block(&mut new_else, &mut else_map);
-                        folded_count += 1; // Count the if simplification
+
+                        // Only count as a simplification if we actually removed the then block
+                        let simplified = !then_block.statements.is_empty();
+                        if simplified {
+                            folded_count += 1;
+                        }
 
                         // Return the else block statements inline
                         IrStmt::If {
@@ -148,8 +158,9 @@ fn fold_constants_in_stmt(
                             else_block: Some(new_else),
                         }
                     } else {
-                        folded_count += 1; // Count the if elimination
-                                           // No else block, this if does nothing
+                        // Count the if elimination only once
+                        folded_count += 1;
+                        // No else block, this if does nothing
                         IrStmt::Expr(IrExpr::Literal(IrLiteral::Unit))
                     }
                 }
