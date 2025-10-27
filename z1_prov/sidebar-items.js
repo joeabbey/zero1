@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ChainError","VerificationError"],"fn":["compute_entry_hash","keygen","sign_entry","verify_chain","verify_chain_signatures","verify_signature"],"struct":["ProvenanceChain","ProvenanceEntry","Signature"],"trait":["ProvenanceChainExt"]};

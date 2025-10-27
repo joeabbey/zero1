@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["generate_typescript","generate_typescript_optimized"],"struct":["TsCodegen"]};

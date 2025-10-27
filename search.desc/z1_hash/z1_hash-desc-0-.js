@@ -1,0 +1,1 @@
+searchState.loadedDescShard("z1_hash", 0, "Container for both semantic and format hashes.\nReturns the argument unchanged.\nCalls <code>U::from(self)</code>.")

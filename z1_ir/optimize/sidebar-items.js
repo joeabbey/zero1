@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["OptLevel"],"fn":["optimize"],"mod":["const_fold","dce","inline"],"struct":["OptStats"]};

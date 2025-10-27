@@ -1,0 +1,1 @@
+searchState.loadedDescShard("z1_codegen_ts", 0, "TypeScript Code Generator for Zero1\nTypeScript code generator\nReturns the argument unchanged.\nGenerate TypeScript code from IR module\nGenerate TypeScript code from IR module\nGenerate TypeScript code from IR module with optimization\nCalls <code>U::from(self)</code>.\nCreate a new TypeScript code generator")

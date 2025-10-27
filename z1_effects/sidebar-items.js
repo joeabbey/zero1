@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Effect","EffectError","EffectWarning"],"fn":["can_call","check_module","collect_effect_warnings"],"type":["Result"]};

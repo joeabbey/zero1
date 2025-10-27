@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["DiagnosticLevel","WarnLevel"],"fn":["levenshtein_distance","print_diagnostic","print_diagnostics","suggest_similar_name"],"struct":["Diagnostic","DiagnosticCollector","DiagnosticConfig"]};

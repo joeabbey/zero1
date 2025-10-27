@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["IrBinOp","IrExpr","IrLiteral","IrStmt","IrType","IrUnaryOp","LoweringError"],"fn":["lower_to_ir"],"mod":["optimize"],"struct":["IrBlock","IrFunction","IrImport","IrModule","IrTypeDef"]};

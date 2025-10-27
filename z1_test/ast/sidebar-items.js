@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Assertion"],"struct":["Fixture","GenBinding","Prop","Spec","TestAttrs","TestConfig","TestFile"]};

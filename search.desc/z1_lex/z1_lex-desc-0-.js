@@ -1,0 +1,1 @@
+searchState.loadedDescShard("z1_lex", 0, "Returns the argument unchanged.\nReturns the argument unchanged.\nCalls <code>U::from(self)</code>.\nCalls <code>U::from(self)</code>.\nConvert source text into a token stream (including a …")

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["print_effect_error","print_parse_error","print_type_error"],"struct":["ErrorPrinterConfig"]};

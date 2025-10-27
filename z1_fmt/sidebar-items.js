@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["FmtError","Mode","SymMapStyle"],"fn":["format_module"],"struct":["FmtOptions","SymbolTable"]};

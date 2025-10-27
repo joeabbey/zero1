@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["DEFAULT_CHARS_PER_TOKEN"],"enum":["CtxError"],"fn":["estimate_cell","estimate_cell_with_config"],"struct":["CellEstimate","EstimateConfig","FnEstimate"]};

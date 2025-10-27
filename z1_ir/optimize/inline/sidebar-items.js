@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["inline_functions","inline_functions_with_config"],"struct":["InlineConfig"]};

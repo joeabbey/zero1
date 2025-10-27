@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["generate_wasm","generate_wasm_binary","generate_wasm_binary_optimized","generate_wasm_optimized","validate_wasm_binary"],"struct":["WasmCodegen"]};

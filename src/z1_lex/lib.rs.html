@@ -1,0 +1,305 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/z1-lex/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-aa0817cf.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="z1_lex" data-themes="" data-resource-suffix="" data-rustdoc-version="1.90.0 (1159e78c4 2025-09-14)" data-channel="1.90.0" data-search-js="search-fa3e91e5.js" data-settings-js="settings-5514c975.js" ><script src="../../static.files/storage-68b7e25d.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">z1_lex/</div>lib.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>logos::Logos;
+<a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>z1_ast::Span;
+<a href=#3 id=3 data-nosnippet>3</a>
+<a href=#4 id=4 data-nosnippet>4</a><span class="attr">#[derive(Debug, Clone, PartialEq, Eq)]
+<a href=#5 id=5 data-nosnippet>5</a></span><span class="kw">pub struct </span>Token {
+<a href=#6 id=6 data-nosnippet>6</a>    <span class="kw">pub </span>kind: TokenKind,
+<a href=#7 id=7 data-nosnippet>7</a>    <span class="kw">pub </span>lexeme: String,
+<a href=#8 id=8 data-nosnippet>8</a>    <span class="kw">pub </span>span: Span,
+<a href=#9 id=9 data-nosnippet>9</a>}
+<a href=#10 id=10 data-nosnippet>10</a>
+<a href=#11 id=11 data-nosnippet>11</a><span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+<a href=#12 id=12 data-nosnippet>12</a></span><span class="kw">pub enum </span>TokenKind {
+<a href=#13 id=13 data-nosnippet>13</a>    <span class="comment">// Keywords
+<a href=#14 id=14 data-nosnippet>14</a>    </span>KwModule,
+<a href=#15 id=15 data-nosnippet>15</a>    KwUse,
+<a href=#16 id=16 data-nosnippet>16</a>    KwAs,
+<a href=#17 id=17 data-nosnippet>17</a>    KwOnly,
+<a href=#18 id=18 data-nosnippet>18</a>    KwCtx,
+<a href=#19 id=19 data-nosnippet>19</a>    KwCaps,
+<a href=#20 id=20 data-nosnippet>20</a>    KwType,
+<a href=#21 id=21 data-nosnippet>21</a>    KwFn,
+<a href=#22 id=22 data-nosnippet>22</a>    KwEff,
+<a href=#23 id=23 data-nosnippet>23</a>    KwLet,
+<a href=#24 id=24 data-nosnippet>24</a>    KwMut,
+<a href=#25 id=25 data-nosnippet>25</a>    KwIf,
+<a href=#26 id=26 data-nosnippet>26</a>    KwElse,
+<a href=#27 id=27 data-nosnippet>27</a>    KwWhile,
+<a href=#28 id=28 data-nosnippet>28</a>    KwReturn,
+<a href=#29 id=29 data-nosnippet>29</a>    KwTrue,
+<a href=#30 id=30 data-nosnippet>30</a>    KwFalse,
+<a href=#31 id=31 data-nosnippet>31</a>    <span class="comment">// Identifiers and literals
+<a href=#32 id=32 data-nosnippet>32</a>    </span>Ident,
+<a href=#33 id=33 data-nosnippet>33</a>    Number,
+<a href=#34 id=34 data-nosnippet>34</a>    String,
+<a href=#35 id=35 data-nosnippet>35</a>    <span class="comment">// Delimiters
+<a href=#36 id=36 data-nosnippet>36</a>    </span>LParen,
+<a href=#37 id=37 data-nosnippet>37</a>    RParen,
+<a href=#38 id=38 data-nosnippet>38</a>    LBrace,
+<a href=#39 id=39 data-nosnippet>39</a>    RBrace,
+<a href=#40 id=40 data-nosnippet>40</a>    LBracket,
+<a href=#41 id=41 data-nosnippet>41</a>    RBracket,
+<a href=#42 id=42 data-nosnippet>42</a>    <span class="comment">// Punctuation
+<a href=#43 id=43 data-nosnippet>43</a>    </span>Comma,
+<a href=#44 id=44 data-nosnippet>44</a>    Dot,
+<a href=#45 id=45 data-nosnippet>45</a>    Colon,
+<a href=#46 id=46 data-nosnippet>46</a>    Semi,
+<a href=#47 id=47 data-nosnippet>47</a>    <span class="comment">// Operators
+<a href=#48 id=48 data-nosnippet>48</a>    </span>Eq,
+<a href=#49 id=49 data-nosnippet>49</a>    EqEq,
+<a href=#50 id=50 data-nosnippet>50</a>    Ne,
+<a href=#51 id=51 data-nosnippet>51</a>    Lt,
+<a href=#52 id=52 data-nosnippet>52</a>    Le,
+<a href=#53 id=53 data-nosnippet>53</a>    Gt,
+<a href=#54 id=54 data-nosnippet>54</a>    Ge,
+<a href=#55 id=55 data-nosnippet>55</a>    Plus,
+<a href=#56 id=56 data-nosnippet>56</a>    Minus,
+<a href=#57 id=57 data-nosnippet>57</a>    Star,
+<a href=#58 id=58 data-nosnippet>58</a>    Slash,
+<a href=#59 id=59 data-nosnippet>59</a>    Percent,
+<a href=#60 id=60 data-nosnippet>60</a>    And,
+<a href=#61 id=61 data-nosnippet>61</a>    Or,
+<a href=#62 id=62 data-nosnippet>62</a>    Not,
+<a href=#63 id=63 data-nosnippet>63</a>    Arrow,
+<a href=#64 id=64 data-nosnippet>64</a>    <span class="comment">// Special
+<a href=#65 id=65 data-nosnippet>65</a>    </span>Sym,
+<a href=#66 id=66 data-nosnippet>66</a>    Hash,
+<a href=#67 id=67 data-nosnippet>67</a>    Unknown,
+<a href=#68 id=68 data-nosnippet>68</a>    Eof,
+<a href=#69 id=69 data-nosnippet>69</a>}
+<a href=#70 id=70 data-nosnippet>70</a>
+<a href=#71 id=71 data-nosnippet>71</a><span class="attr">#[derive(Logos, Debug, Clone, Copy, PartialEq, Eq)]
+<a href=#72 id=72 data-nosnippet>72</a></span><span class="kw">enum </span>RawToken {
+<a href=#73 id=73 data-nosnippet>73</a>    <span class="attr">#[regex(<span class="string">r"[ \t\r\n]+"</span>, logos::skip)]
+<a href=#74 id=74 data-nosnippet>74</a>    #[regex(<span class="string">r"//[^\n]*"</span>, logos::skip)]
+<a href=#75 id=75 data-nosnippet>75</a>    #[regex(<span class="string">r"/\*([^*]|\*+[^*/])*\*+/"</span>, logos::skip)]
+<a href=#76 id=76 data-nosnippet>76</a>    </span>Error,
+<a href=#77 id=77 data-nosnippet>77</a>
+<a href=#78 id=78 data-nosnippet>78</a>    <span class="comment">// Keywords (order matters for longer tokens first)
+<a href=#79 id=79 data-nosnippet>79</a>    </span><span class="attr">#[token(<span class="string">"module"</span>)]
+<a href=#80 id=80 data-nosnippet>80</a>    #[token(<span class="string">"m"</span>)]
+<a href=#81 id=81 data-nosnippet>81</a>    </span>KwModule,
+<a href=#82 id=82 data-nosnippet>82</a>
+<a href=#83 id=83 data-nosnippet>83</a>    <span class="attr">#[token(<span class="string">"use"</span>)]
+<a href=#84 id=84 data-nosnippet>84</a>    #[token(<span class="string">"u"</span>)]
+<a href=#85 id=85 data-nosnippet>85</a>    </span>KwUse,
+<a href=#86 id=86 data-nosnippet>86</a>
+<a href=#87 id=87 data-nosnippet>87</a>    <span class="attr">#[token(<span class="string">"as"</span>)]
+<a href=#88 id=88 data-nosnippet>88</a>    </span>KwAs,
+<a href=#89 id=89 data-nosnippet>89</a>
+<a href=#90 id=90 data-nosnippet>90</a>    <span class="attr">#[token(<span class="string">"only"</span>)]
+<a href=#91 id=91 data-nosnippet>91</a>    </span>KwOnly,
+<a href=#92 id=92 data-nosnippet>92</a>
+<a href=#93 id=93 data-nosnippet>93</a>    <span class="attr">#[token(<span class="string">"ctx"</span>)]
+<a href=#94 id=94 data-nosnippet>94</a>    </span>KwCtx,
+<a href=#95 id=95 data-nosnippet>95</a>
+<a href=#96 id=96 data-nosnippet>96</a>    <span class="attr">#[token(<span class="string">"caps"</span>)]
+<a href=#97 id=97 data-nosnippet>97</a>    </span>KwCaps,
+<a href=#98 id=98 data-nosnippet>98</a>
+<a href=#99 id=99 data-nosnippet>99</a>    <span class="attr">#[token(<span class="string">"type"</span>)]
+<a href=#100 id=100 data-nosnippet>100</a>    #[token(<span class="string">"t"</span>)]
+<a href=#101 id=101 data-nosnippet>101</a>    </span>KwType,
+<a href=#102 id=102 data-nosnippet>102</a>
+<a href=#103 id=103 data-nosnippet>103</a>    <span class="attr">#[token(<span class="string">"fn"</span>)]
+<a href=#104 id=104 data-nosnippet>104</a>    #[token(<span class="string">"f"</span>)]
+<a href=#105 id=105 data-nosnippet>105</a>    </span>KwFn,
+<a href=#106 id=106 data-nosnippet>106</a>
+<a href=#107 id=107 data-nosnippet>107</a>    <span class="attr">#[token(<span class="string">"eff"</span>)]
+<a href=#108 id=108 data-nosnippet>108</a>    </span>KwEff,
+<a href=#109 id=109 data-nosnippet>109</a>
+<a href=#110 id=110 data-nosnippet>110</a>    <span class="attr">#[token(<span class="string">"let"</span>)]
+<a href=#111 id=111 data-nosnippet>111</a>    </span>KwLet,
+<a href=#112 id=112 data-nosnippet>112</a>
+<a href=#113 id=113 data-nosnippet>113</a>    <span class="attr">#[token(<span class="string">"mut"</span>)]
+<a href=#114 id=114 data-nosnippet>114</a>    </span>KwMut,
+<a href=#115 id=115 data-nosnippet>115</a>
+<a href=#116 id=116 data-nosnippet>116</a>    <span class="attr">#[token(<span class="string">"if"</span>)]
+<a href=#117 id=117 data-nosnippet>117</a>    </span>KwIf,
+<a href=#118 id=118 data-nosnippet>118</a>
+<a href=#119 id=119 data-nosnippet>119</a>    <span class="attr">#[token(<span class="string">"else"</span>)]
+<a href=#120 id=120 data-nosnippet>120</a>    </span>KwElse,
+<a href=#121 id=121 data-nosnippet>121</a>
+<a href=#122 id=122 data-nosnippet>122</a>    <span class="attr">#[token(<span class="string">"while"</span>)]
+<a href=#123 id=123 data-nosnippet>123</a>    </span>KwWhile,
+<a href=#124 id=124 data-nosnippet>124</a>
+<a href=#125 id=125 data-nosnippet>125</a>    <span class="attr">#[token(<span class="string">"return"</span>)]
+<a href=#126 id=126 data-nosnippet>126</a>    #[token(<span class="string">"ret"</span>)]
+<a href=#127 id=127 data-nosnippet>127</a>    </span>KwReturn,
+<a href=#128 id=128 data-nosnippet>128</a>
+<a href=#129 id=129 data-nosnippet>129</a>    <span class="attr">#[token(<span class="string">"true"</span>)]
+<a href=#130 id=130 data-nosnippet>130</a>    </span>KwTrue,
+<a href=#131 id=131 data-nosnippet>131</a>
+<a href=#132 id=132 data-nosnippet>132</a>    <span class="attr">#[token(<span class="string">"false"</span>)]
+<a href=#133 id=133 data-nosnippet>133</a>    </span>KwFalse,
+<a href=#134 id=134 data-nosnippet>134</a>
+<a href=#135 id=135 data-nosnippet>135</a>    <span class="comment">// Identifiers and literals (after keywords)
+<a href=#136 id=136 data-nosnippet>136</a>    // Lower priority than keywords to avoid conflicts
+<a href=#137 id=137 data-nosnippet>137</a>    </span><span class="attr">#[regex(<span class="string">r"[A-Za-z_][A-Za-z0-9_\.]*"</span>, priority = <span class="number">1</span>)]
+<a href=#138 id=138 data-nosnippet>138</a>    </span>Ident,
+<a href=#139 id=139 data-nosnippet>139</a>
+<a href=#140 id=140 data-nosnippet>140</a>    <span class="attr">#[regex(<span class="string">r"[0-9]+"</span>)]
+<a href=#141 id=141 data-nosnippet>141</a>    </span>Number,
+<a href=#142 id=142 data-nosnippet>142</a>
+<a href=#143 id=143 data-nosnippet>143</a>    <span class="attr">#[regex(<span class="string">r#""([^"\\]|\\.)*""#</span>)]
+<a href=#144 id=144 data-nosnippet>144</a>    </span>String,
+<a href=#145 id=145 data-nosnippet>145</a>
+<a href=#146 id=146 data-nosnippet>146</a>    <span class="comment">// Delimiters
+<a href=#147 id=147 data-nosnippet>147</a>    </span><span class="attr">#[token(<span class="string">"("</span>)]
+<a href=#148 id=148 data-nosnippet>148</a>    </span>LParen,
+<a href=#149 id=149 data-nosnippet>149</a>    <span class="attr">#[token(<span class="string">")"</span>)]
+<a href=#150 id=150 data-nosnippet>150</a>    </span>RParen,
+<a href=#151 id=151 data-nosnippet>151</a>    <span class="attr">#[token(<span class="string">"{"</span>)]
+<a href=#152 id=152 data-nosnippet>152</a>    </span>LBrace,
+<a href=#153 id=153 data-nosnippet>153</a>    <span class="attr">#[token(<span class="string">"}"</span>)]
+<a href=#154 id=154 data-nosnippet>154</a>    </span>RBrace,
+<a href=#155 id=155 data-nosnippet>155</a>    <span class="attr">#[token(<span class="string">"["</span>)]
+<a href=#156 id=156 data-nosnippet>156</a>    </span>LBracket,
+<a href=#157 id=157 data-nosnippet>157</a>    <span class="attr">#[token(<span class="string">"]"</span>)]
+<a href=#158 id=158 data-nosnippet>158</a>    </span>RBracket,
+<a href=#159 id=159 data-nosnippet>159</a>
+<a href=#160 id=160 data-nosnippet>160</a>    <span class="comment">// Punctuation
+<a href=#161 id=161 data-nosnippet>161</a>    </span><span class="attr">#[token(<span class="string">","</span>)]
+<a href=#162 id=162 data-nosnippet>162</a>    </span>Comma,
+<a href=#163 id=163 data-nosnippet>163</a>    <span class="attr">#[token(<span class="string">"."</span>)]
+<a href=#164 id=164 data-nosnippet>164</a>    </span>Dot,
+<a href=#165 id=165 data-nosnippet>165</a>    <span class="attr">#[token(<span class="string">":"</span>)]
+<a href=#166 id=166 data-nosnippet>166</a>    </span>Colon,
+<a href=#167 id=167 data-nosnippet>167</a>    <span class="attr">#[token(<span class="string">";"</span>)]
+<a href=#168 id=168 data-nosnippet>168</a>    </span>Semi,
+<a href=#169 id=169 data-nosnippet>169</a>
+<a href=#170 id=170 data-nosnippet>170</a>    <span class="comment">// Operators (longer tokens first!)
+<a href=#171 id=171 data-nosnippet>171</a>    </span><span class="attr">#[token(<span class="string">"=="</span>)]
+<a href=#172 id=172 data-nosnippet>172</a>    </span>EqEq,
+<a href=#173 id=173 data-nosnippet>173</a>    <span class="attr">#[token(<span class="string">"!="</span>)]
+<a href=#174 id=174 data-nosnippet>174</a>    </span>Ne,
+<a href=#175 id=175 data-nosnippet>175</a>    <span class="attr">#[token(<span class="string">"&lt;="</span>)]
+<a href=#176 id=176 data-nosnippet>176</a>    </span>Le,
+<a href=#177 id=177 data-nosnippet>177</a>    <span class="attr">#[token(<span class="string">"&gt;="</span>)]
+<a href=#178 id=178 data-nosnippet>178</a>    </span>Ge,
+<a href=#179 id=179 data-nosnippet>179</a>    <span class="attr">#[token(<span class="string">"&amp;&amp;"</span>)]
+<a href=#180 id=180 data-nosnippet>180</a>    </span>And,
+<a href=#181 id=181 data-nosnippet>181</a>    <span class="attr">#[token(<span class="string">"||"</span>)]
+<a href=#182 id=182 data-nosnippet>182</a>    </span>Or,
+<a href=#183 id=183 data-nosnippet>183</a>    <span class="attr">#[token(<span class="string">"-&gt;"</span>)]
+<a href=#184 id=184 data-nosnippet>184</a>    </span>Arrow,
+<a href=#185 id=185 data-nosnippet>185</a>
+<a href=#186 id=186 data-nosnippet>186</a>    <span class="comment">// Single-char operators (after multi-char)
+<a href=#187 id=187 data-nosnippet>187</a>    </span><span class="attr">#[token(<span class="string">"="</span>)]
+<a href=#188 id=188 data-nosnippet>188</a>    </span>Eq,
+<a href=#189 id=189 data-nosnippet>189</a>    <span class="attr">#[token(<span class="string">"&lt;"</span>)]
+<a href=#190 id=190 data-nosnippet>190</a>    </span>Lt,
+<a href=#191 id=191 data-nosnippet>191</a>    <span class="attr">#[token(<span class="string">"&gt;"</span>)]
+<a href=#192 id=192 data-nosnippet>192</a>    </span>Gt,
+<a href=#193 id=193 data-nosnippet>193</a>    <span class="attr">#[token(<span class="string">"+"</span>)]
+<a href=#194 id=194 data-nosnippet>194</a>    </span>Plus,
+<a href=#195 id=195 data-nosnippet>195</a>    <span class="attr">#[token(<span class="string">"-"</span>)]
+<a href=#196 id=196 data-nosnippet>196</a>    </span>Minus,
+<a href=#197 id=197 data-nosnippet>197</a>    <span class="attr">#[token(<span class="string">"*"</span>)]
+<a href=#198 id=198 data-nosnippet>198</a>    </span>Star,
+<a href=#199 id=199 data-nosnippet>199</a>    <span class="attr">#[token(<span class="string">"/"</span>)]
+<a href=#200 id=200 data-nosnippet>200</a>    </span>Slash,
+<a href=#201 id=201 data-nosnippet>201</a>    <span class="attr">#[token(<span class="string">"%"</span>)]
+<a href=#202 id=202 data-nosnippet>202</a>    </span>Percent,
+<a href=#203 id=203 data-nosnippet>203</a>    <span class="attr">#[token(<span class="string">"!"</span>)]
+<a href=#204 id=204 data-nosnippet>204</a>    </span>Not,
+<a href=#205 id=205 data-nosnippet>205</a>
+<a href=#206 id=206 data-nosnippet>206</a>    <span class="comment">// Special
+<a href=#207 id=207 data-nosnippet>207</a>    </span><span class="attr">#[token(<span class="string">"#sym"</span>)]
+<a href=#208 id=208 data-nosnippet>208</a>    </span>Sym,
+<a href=#209 id=209 data-nosnippet>209</a>    <span class="attr">#[token(<span class="string">"#"</span>)]
+<a href=#210 id=210 data-nosnippet>210</a>    </span>Hash,
+<a href=#211 id=211 data-nosnippet>211</a>}
+<a href=#212 id=212 data-nosnippet>212</a>
+<a href=#213 id=213 data-nosnippet>213</a><span class="kw">impl </span>From&lt;RawToken&gt; <span class="kw">for </span>TokenKind {
+<a href=#214 id=214 data-nosnippet>214</a>    <span class="kw">fn </span>from(value: RawToken) -&gt; <span class="self">Self </span>{
+<a href=#215 id=215 data-nosnippet>215</a>        <span class="kw">match </span>value {
+<a href=#216 id=216 data-nosnippet>216</a>            RawToken::KwModule =&gt; TokenKind::KwModule,
+<a href=#217 id=217 data-nosnippet>217</a>            RawToken::KwUse =&gt; TokenKind::KwUse,
+<a href=#218 id=218 data-nosnippet>218</a>            RawToken::KwAs =&gt; TokenKind::KwAs,
+<a href=#219 id=219 data-nosnippet>219</a>            RawToken::KwOnly =&gt; TokenKind::KwOnly,
+<a href=#220 id=220 data-nosnippet>220</a>            RawToken::KwCtx =&gt; TokenKind::KwCtx,
+<a href=#221 id=221 data-nosnippet>221</a>            RawToken::KwCaps =&gt; TokenKind::KwCaps,
+<a href=#222 id=222 data-nosnippet>222</a>            RawToken::KwType =&gt; TokenKind::KwType,
+<a href=#223 id=223 data-nosnippet>223</a>            RawToken::KwFn =&gt; TokenKind::KwFn,
+<a href=#224 id=224 data-nosnippet>224</a>            RawToken::KwEff =&gt; TokenKind::KwEff,
+<a href=#225 id=225 data-nosnippet>225</a>            RawToken::KwLet =&gt; TokenKind::KwLet,
+<a href=#226 id=226 data-nosnippet>226</a>            RawToken::KwMut =&gt; TokenKind::KwMut,
+<a href=#227 id=227 data-nosnippet>227</a>            RawToken::KwIf =&gt; TokenKind::KwIf,
+<a href=#228 id=228 data-nosnippet>228</a>            RawToken::KwElse =&gt; TokenKind::KwElse,
+<a href=#229 id=229 data-nosnippet>229</a>            RawToken::KwWhile =&gt; TokenKind::KwWhile,
+<a href=#230 id=230 data-nosnippet>230</a>            RawToken::KwReturn =&gt; TokenKind::KwReturn,
+<a href=#231 id=231 data-nosnippet>231</a>            RawToken::KwTrue =&gt; TokenKind::KwTrue,
+<a href=#232 id=232 data-nosnippet>232</a>            RawToken::KwFalse =&gt; TokenKind::KwFalse,
+<a href=#233 id=233 data-nosnippet>233</a>            RawToken::Ident =&gt; TokenKind::Ident,
+<a href=#234 id=234 data-nosnippet>234</a>            RawToken::Number =&gt; TokenKind::Number,
+<a href=#235 id=235 data-nosnippet>235</a>            RawToken::String =&gt; TokenKind::String,
+<a href=#236 id=236 data-nosnippet>236</a>            RawToken::LParen =&gt; TokenKind::LParen,
+<a href=#237 id=237 data-nosnippet>237</a>            RawToken::RParen =&gt; TokenKind::RParen,
+<a href=#238 id=238 data-nosnippet>238</a>            RawToken::LBrace =&gt; TokenKind::LBrace,
+<a href=#239 id=239 data-nosnippet>239</a>            RawToken::RBrace =&gt; TokenKind::RBrace,
+<a href=#240 id=240 data-nosnippet>240</a>            RawToken::LBracket =&gt; TokenKind::LBracket,
+<a href=#241 id=241 data-nosnippet>241</a>            RawToken::RBracket =&gt; TokenKind::RBracket,
+<a href=#242 id=242 data-nosnippet>242</a>            RawToken::Comma =&gt; TokenKind::Comma,
+<a href=#243 id=243 data-nosnippet>243</a>            RawToken::Dot =&gt; TokenKind::Dot,
+<a href=#244 id=244 data-nosnippet>244</a>            RawToken::Colon =&gt; TokenKind::Colon,
+<a href=#245 id=245 data-nosnippet>245</a>            RawToken::Semi =&gt; TokenKind::Semi,
+<a href=#246 id=246 data-nosnippet>246</a>            RawToken::EqEq =&gt; TokenKind::EqEq,
+<a href=#247 id=247 data-nosnippet>247</a>            RawToken::Ne =&gt; TokenKind::Ne,
+<a href=#248 id=248 data-nosnippet>248</a>            RawToken::Le =&gt; TokenKind::Le,
+<a href=#249 id=249 data-nosnippet>249</a>            RawToken::Ge =&gt; TokenKind::Ge,
+<a href=#250 id=250 data-nosnippet>250</a>            RawToken::And =&gt; TokenKind::And,
+<a href=#251 id=251 data-nosnippet>251</a>            RawToken::Or =&gt; TokenKind::Or,
+<a href=#252 id=252 data-nosnippet>252</a>            RawToken::Eq =&gt; TokenKind::Eq,
+<a href=#253 id=253 data-nosnippet>253</a>            RawToken::Lt =&gt; TokenKind::Lt,
+<a href=#254 id=254 data-nosnippet>254</a>            RawToken::Gt =&gt; TokenKind::Gt,
+<a href=#255 id=255 data-nosnippet>255</a>            RawToken::Plus =&gt; TokenKind::Plus,
+<a href=#256 id=256 data-nosnippet>256</a>            RawToken::Minus =&gt; TokenKind::Minus,
+<a href=#257 id=257 data-nosnippet>257</a>            RawToken::Star =&gt; TokenKind::Star,
+<a href=#258 id=258 data-nosnippet>258</a>            RawToken::Slash =&gt; TokenKind::Slash,
+<a href=#259 id=259 data-nosnippet>259</a>            RawToken::Percent =&gt; TokenKind::Percent,
+<a href=#260 id=260 data-nosnippet>260</a>            RawToken::Not =&gt; TokenKind::Not,
+<a href=#261 id=261 data-nosnippet>261</a>            RawToken::Arrow =&gt; TokenKind::Arrow,
+<a href=#262 id=262 data-nosnippet>262</a>            RawToken::Sym =&gt; TokenKind::Sym,
+<a href=#263 id=263 data-nosnippet>263</a>            RawToken::Hash =&gt; TokenKind::Hash,
+<a href=#264 id=264 data-nosnippet>264</a>            RawToken::Error =&gt; TokenKind::Unknown,
+<a href=#265 id=265 data-nosnippet>265</a>        }
+<a href=#266 id=266 data-nosnippet>266</a>    }
+<a href=#267 id=267 data-nosnippet>267</a>}
+<a href=#268 id=268 data-nosnippet>268</a>
+<a href=#269 id=269 data-nosnippet>269</a><span class="doccomment">/// Convert source text into a token stream (including a terminal EOF token).
+<a href=#270 id=270 data-nosnippet>270</a></span><span class="kw">pub fn </span>lex(source: <span class="kw-2">&amp;</span>str) -&gt; Vec&lt;Token&gt; {
+<a href=#271 id=271 data-nosnippet>271</a>    <span class="kw">let </span><span class="kw-2">mut </span>tokens = Vec::new();
+<a href=#272 id=272 data-nosnippet>272</a>    <span class="kw">let </span><span class="kw-2">mut </span>lexer = RawToken::lexer(source);
+<a href=#273 id=273 data-nosnippet>273</a>    <span class="kw">while let </span><span class="prelude-val">Some</span>(raw) = lexer.next() {
+<a href=#274 id=274 data-nosnippet>274</a>        <span class="kw">let </span>raw = raw.unwrap_or(RawToken::Error);
+<a href=#275 id=275 data-nosnippet>275</a>        <span class="kw">let </span>span = lexer.span();
+<a href=#276 id=276 data-nosnippet>276</a>        <span class="kw">let </span>token = Token {
+<a href=#277 id=277 data-nosnippet>277</a>            kind: TokenKind::from(raw),
+<a href=#278 id=278 data-nosnippet>278</a>            lexeme: lexer.slice().to_string(),
+<a href=#279 id=279 data-nosnippet>279</a>            span: Span::new(span.start <span class="kw">as </span>u32, span.end <span class="kw">as </span>u32),
+<a href=#280 id=280 data-nosnippet>280</a>        };
+<a href=#281 id=281 data-nosnippet>281</a>        tokens.push(token);
+<a href=#282 id=282 data-nosnippet>282</a>    }
+<a href=#283 id=283 data-nosnippet>283</a>    tokens.push(Token {
+<a href=#284 id=284 data-nosnippet>284</a>        kind: TokenKind::Eof,
+<a href=#285 id=285 data-nosnippet>285</a>        lexeme: String::new(),
+<a href=#286 id=286 data-nosnippet>286</a>        span: Span::new(source.len() <span class="kw">as </span>u32, source.len() <span class="kw">as </span>u32),
+<a href=#287 id=287 data-nosnippet>287</a>    });
+<a href=#288 id=288 data-nosnippet>288</a>    tokens
+<a href=#289 id=289 data-nosnippet>289</a>}
+<a href=#290 id=290 data-nosnippet>290</a>
+<a href=#291 id=291 data-nosnippet>291</a><span class="attr">#[cfg(test)]
+<a href=#292 id=292 data-nosnippet>292</a></span><span class="kw">mod </span>tests {
+<a href=#293 id=293 data-nosnippet>293</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+<a href=#294 id=294 data-nosnippet>294</a>
+<a href=#295 id=295 data-nosnippet>295</a>    <span class="attr">#[test]
+<a href=#296 id=296 data-nosnippet>296</a>    </span><span class="kw">fn </span>lexes_module_header() {
+<a href=#297 id=297 data-nosnippet>297</a>        <span class="kw">let </span>input = <span class="string">"m http.server:1.0 ctx=128 caps=[net]"</span>;
+<a href=#298 id=298 data-nosnippet>298</a>        <span class="kw">let </span>tokens = lex(input);
+<a href=#299 id=299 data-nosnippet>299</a>        <span class="macro">assert!</span>(tokens.iter().any(|t| t.kind == TokenKind::KwModule));
+<a href=#300 id=300 data-nosnippet>300</a>        <span class="macro">assert!</span>(tokens.iter().any(|t| <span class="macro">matches!</span>(t.kind, TokenKind::Ident)));
+<a href=#301 id=301 data-nosnippet>301</a>        <span class="macro">assert!</span>(tokens.iter().any(|t| t.kind == TokenKind::KwCtx));
+<a href=#302 id=302 data-nosnippet>302</a>        <span class="macro">assert!</span>(tokens.iter().any(|t| t.kind == TokenKind::KwCaps));
+<a href=#303 id=303 data-nosnippet>303</a>        <span class="macro">assert_eq!</span>(tokens.last().map(|t| t.kind), <span class="prelude-val">Some</span>(TokenKind::Eof));
+<a href=#304 id=304 data-nosnippet>304</a>    }
+<a href=#305 id=305 data-nosnippet>305</a>}</code></pre></div></section></main></body></html>

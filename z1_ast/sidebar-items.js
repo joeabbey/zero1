@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["BinOp","ElseBlock","Expr","Item","Literal","Stmt","TypeExpr","UnaryOp"],"struct":["AssignStmt","Block","ExprStmt","FnDecl","IfStmt","Import","LetStmt","Module","ModulePath","Param","RecordField","RecordInit","ReturnStmt","Span","SymbolMap","SymbolPair","TypeDecl","WhileStmt"],"type":["Ident"]};
