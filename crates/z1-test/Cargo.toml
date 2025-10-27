@@ -13,6 +13,6 @@ logos.workspace = true
 thiserror.workspace = true
 serde = { workspace = true }
 serde_json = { workspace = true }
-proptest = "1.4"
+proptest = "1.9"
 
 [dev-dependencies]
