@@ -1,7 +1,10 @@
 m example.config:1.0 ctx=512 caps=[env]
 u "std/env/vars" as Env only [getVar, hasVar]
+
 u "std/env/args" as Args only [getArgs, argCount]
+
 u "std/env/process" as Proc only [getPid, getCwd, exit]
+
 #sym { Config: Cfg, loadConfig: lc, validateConfig: vc, main: m }
 
 t Cfg = { apiKey: Str, environment: Str, port: U32, debug: Bool }

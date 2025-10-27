@@ -1,11 +1,13 @@
-m example.processor:1.0 ctx=2048 caps=[fs.ro, fs.rw, crypto]
+m example.processor:1.0 ctx=2048 caps=[fs.ro,fs.rw,crypto]
 u "std/fs/core" as Fs only [readText, writeText, exists, ReadResult, WriteResult]
+
 u "std/crypto/hash" as Hash only [sha256, sha3_256]
+
 #sym { DataRow: DR, ProcessResult: PR, Statistics: Stats, ProcessingPipeline: PP, parseRow: pr, filterRow: fr, transformRow: tr, computeStats: cs, generateHash: gh, processFile: pf, writeResults: wr, generateReport: gr, main: mn }
 
 t DR = { id: U64, name: Str, value: U64, valid: Bool }
 
-t PR = Ok{ rows: Str, stats: Stats, hash: Str } | Err{ error: Str }
+t PR = Ok
 
 t Stats = { totalRows: U64, validRows: U64, invalidRows: U64, sumValues: U64, avgValue: U64 }
 

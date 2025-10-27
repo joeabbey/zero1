@@ -1,12 +1,13 @@
-m example.api.server:1.0 ctx=1024 caps=[net, fs.ro]
+m example.api.server:1.0 ctx=1024 caps=[net,fs.ro]
 u "std/http/server" as H only [HttpRequest, HttpResponse, createServer, listen, getMethod, getPath, setStatus, setBody]
+
 #sym { User: U, UserList: UL, Response: R, Router: Rtr, StatusResponse: SR, handleRequest: hr, routeRequest: rr, handleStatus: hs, handleListUsers: hlu, handleGetUser: hgu, handleCreateUser: hcu, handleUpdateUser: huu, handleDeleteUser: hdu, handleStatic: hst, parseUserId: puid, findUser: fu, createUser: cu, updateUser: uu, deleteUser: du, userToJson: utj, usersToJson: usj, parseUserJson: puj, main: mn }
 
 t U = { id: U32, name: Str, email: Str }
 
 t UL = { users: Str }
 
-t R = Ok{ response: H.HttpResponse } | Err{ error: Str }
+t R = Ok
 
 t SR = { ok: Bool, message: Str }
 

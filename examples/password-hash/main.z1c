@@ -1,7 +1,10 @@
 m example.password.hash:1 ctx=512 caps=[crypto]
 u "std/crypto/hash" as Hash
+
 u "std/crypto/hmac" as Hmac
+
 u "std/crypto/random" as Rand
+
 #sym { hashPassword: hp, verifyPassword: vp, generateSalt: gs, PasswordHash: PH }
 
 t PH = { hash: Str, salt: Str }
