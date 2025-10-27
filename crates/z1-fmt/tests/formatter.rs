@@ -7,7 +7,9 @@ fn read_fixture(path: &str) -> String {
         .join("..")
         .join("..")
         .join(path);
-    std::fs::read_to_string(root).expect("fixture not found")
+    let content = std::fs::read_to_string(root).expect("fixture not found");
+    // Normalize line endings to LF for consistent cross-platform behavior
+    content.replace("\r\n", "\n")
 }
 
 #[test]
