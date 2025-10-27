@@ -235,37 +235,39 @@ mod tests {
 
     #[test]
     fn test_save_and_load_file() {
-        let temp_file = "/tmp/test_provenance_chain.json";
+        let temp_dir = tempfile::tempdir().unwrap();
+        let temp_file = temp_dir.path().join("test_provenance_chain.json");
 
         let mut chain = ProvenanceChain::new();
         let entry = create_test_entry("cell:test@v1", "agent:test");
         chain.append(entry).unwrap();
 
-        chain.save_to_file(temp_file).unwrap();
+        chain.save_to_file(temp_file.to_str().unwrap()).unwrap();
 
-        let loaded = ProvenanceChain::load_from_file(temp_file).unwrap();
+        let loaded = ProvenanceChain::load_from_file(temp_file.to_str().unwrap()).unwrap();
         assert_eq!(chain.merkle_root, loaded.merkle_root);
         assert_eq!(chain.entries.len(), loaded.entries.len());
 
-        fs::remove_file(temp_file).ok();
+        // temp_dir is automatically cleaned up when dropped
     }
 
     #[test]
     fn test_append_to_loaded_chain() {
-        let temp_file = "/tmp/test_provenance_append_chain.json";
+        let temp_dir = tempfile::tempdir().unwrap();
+        let temp_file = temp_dir.path().join("test_provenance_append_chain.json");
 
         let mut chain = ProvenanceChain::new();
         let entry1 = create_test_entry("cell:test@v1", "agent:test");
         chain.append(entry1).unwrap();
-        chain.save_to_file(temp_file).unwrap();
+        chain.save_to_file(temp_file.to_str().unwrap()).unwrap();
 
-        let mut loaded = ProvenanceChain::load_from_file(temp_file).unwrap();
+        let mut loaded = ProvenanceChain::load_from_file(temp_file.to_str().unwrap()).unwrap();
         let entry2 = create_test_entry("cell:test@v2", "agent:test");
         loaded.append(entry2).unwrap();
 
         assert_eq!(loaded.len(), 2);
 
-        fs::remove_file(temp_file).ok();
+        // temp_dir is automatically cleaned up when dropped
     }
 
     #[test]
@@ -353,13 +355,14 @@ mod tests {
 
     #[test]
     fn test_load_corrupted_file() {
-        let temp_file = "/tmp/test_corrupted_chain.json";
-        fs::write(temp_file, "not valid json").unwrap();
+        let temp_dir = tempfile::tempdir().unwrap();
+        let temp_file = temp_dir.path().join("test_corrupted_chain.json");
+        fs::write(&temp_file, "not valid json").unwrap();
 
-        let result = ProvenanceChain::load_from_file(temp_file);
+        let result = ProvenanceChain::load_from_file(temp_file.to_str().unwrap());
         assert!(result.is_err());
 
-        fs::remove_file(temp_file).ok();
+        // temp_dir is automatically cleaned up when dropped
     }
 
     #[test]
