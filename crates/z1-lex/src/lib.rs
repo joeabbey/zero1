@@ -133,7 +133,8 @@ enum RawToken {
     KwFalse,
 
     // Identifiers and literals (after keywords)
-    #[regex(r"[A-Za-z_][A-Za-z0-9_\.]*")]
+    // Lower priority than keywords to avoid conflicts
+    #[regex(r"[A-Za-z_][A-Za-z0-9_\.]*", priority = 1)]
     Ident,
 
     #[regex(r"[0-9]+")]
