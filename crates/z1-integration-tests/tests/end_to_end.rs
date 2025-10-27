@@ -21,24 +21,62 @@ fn fixtures_dir() -> PathBuf {
 }
 
 fn cli_bin() -> PathBuf {
-    let mut path = workspace_root().join("target").join("debug").join("z1-cli");
+    let root = workspace_root().join("target");
+    let exe_name = if cfg!(target_os = "windows") {
+        "z1-cli.exe"
+    } else {
+        "z1-cli"
+    };
 
-    // Add .exe extension on Windows
-    if cfg!(target_os = "windows") {
-        path.set_extension("exe");
+    // Try debug first, then release
+    for profile in &["debug", "release"] {
+        let path = root.join(profile).join(exe_name);
+        if path.exists() {
+            return path;
+        }
     }
 
-    path
+    // If not found, return debug path (will fail with better error message)
+    root.join("debug").join(exe_name)
 }
 
 // Ensure CLI is built before running tests
 fn ensure_cli_built() {
-    let status = Command::new("cargo")
+    let output = Command::new("cargo")
         .args(["build", "-p", "z1-cli"])
-        .status()
-        .expect("Failed to build z1-cli");
+        .output()
+        .expect("Failed to execute cargo build");
 
-    assert!(status.success(), "Failed to build z1-cli");
+    if !output.status.success() {
+        eprintln!("=== STDOUT ===");
+        eprintln!("{}", String::from_utf8_lossy(&output.stdout));
+        eprintln!("=== STDERR ===");
+        eprintln!("{}", String::from_utf8_lossy(&output.stderr));
+        panic!("Failed to build z1-cli");
+    }
+
+    // Verify the binary was actually created
+    let bin_path = cli_bin();
+    if !bin_path.exists() {
+        let target_dir = workspace_root().join("target");
+        let debug_path = target_dir.join("debug").join("z1-cli");
+        let release_path = target_dir.join("release").join("z1-cli");
+
+        eprintln!("=== Binary location check ===");
+        eprintln!("Looking for binary at: {:?}", bin_path);
+        eprintln!("Debug path exists: {}", debug_path.exists());
+        eprintln!("Release path exists: {}", release_path.exists());
+
+        // List contents of target directory
+        if let Ok(entries) = std::fs::read_dir(&target_dir) {
+            eprintln!("Contents of target/:");
+            for entry in entries.flatten() {
+                eprintln!("  {:?}", entry.path());
+            }
+        }
+
+        panic!("CLI binary not found after build. See debug output above.");
+    }
 }
 
 // ============================================================================

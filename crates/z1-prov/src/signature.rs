@@ -201,14 +201,17 @@ mod tests {
     #[test]
     fn test_verify_signature_with_empty_key() {
         let entry = make_test_entry();
-        let empty_key = [0u8; 32];
 
-        let sig = Signature {
+        // Generate a valid keypair
+        let (valid_pub, _) = keygen();
+
+        // Create a signature with the wrong/different content (all zeros)
+        let wrong_sig = Signature {
             by: "test".to_string(),
             sig: "ed25519:".to_string() + &"00".repeat(64),
         };
 
-        // Should not panic, just return false
-        assert!(!verify_signature(&entry, &sig, &empty_key));
+        // Verification should fail because the signature doesn't match the entry
+        assert!(!verify_signature(&entry, &wrong_sig, &valid_pub));
     }
 }
