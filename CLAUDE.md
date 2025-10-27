@@ -189,184 +189,53 @@ Use this pattern when:
 
 #### Setup Procedure
 
-**Generic Script Template:**
+**Automated Scripts:**
+
+The repository includes helper scripts in `scripts/` for managing worktrees:
 
 ```bash
-#!/bin/bash
-# setup-parallel-worktrees.sh
-# Usage: ./setup-parallel-worktrees.sh <base-name> <task1> <task2> ...
-# Example: ./setup-parallel-worktrees.sh m4-phase1 stdlib-fs stdlib-crypto stdlib-env
+# Setup parallel worktrees
+./scripts/setup-parallel-worktrees.sh <base-name> <task1> <task2> <task3> ...
 
-BASE_NAME=$1
-shift
-TASKS=("$@")
+# Integrate completed worktrees
+./scripts/integrate-worktrees.sh <base-name> <task1> <task2> <task3> ...
 
-echo "Setting up ${#TASKS[@]} parallel worktrees for $BASE_NAME..."
-
-for TASK in "${TASKS[@]}"; do
-  BRANCH="feature/$TASK"
-  WORKTREE="../${BASE_NAME}-${TASK}"
-
-  echo ""
-  echo "Creating worktree for $TASK:"
-  echo "  Branch: $BRANCH"
-  echo "  Path: $WORKTREE"
-
-  # Create feature branch from current HEAD
-  git branch "$BRANCH"
-
-  # Create worktree
-  git worktree add "$WORKTREE" "$BRANCH"
-
-  echo "✓ Ready: cd $WORKTREE && claude"
-done
-
-echo ""
-echo "All worktrees created! Next steps:"
-echo ""
-echo "1. Launch agents in separate terminals:"
-for TASK in "${TASKS[@]}"; do
-  WORKTREE="../${BASE_NAME}-${TASK}"
-  echo "   cd $WORKTREE && claude"
-done
-echo ""
-echo "2. After all agents complete, integrate:"
-echo "   cd <main-repo>"
-echo "   ./integrate-worktrees.sh $BASE_NAME ${TASKS[*]}"
+# Cleanup worktrees after integration
+./scripts/cleanup-worktrees.sh <base-name> <task1> <task2> <task3> ...
 ```
 
-**Integration Script Template:**
+**What the scripts do:**
+- `setup-parallel-worktrees.sh` - Creates feature branches and worktrees for each task
+- `integrate-worktrees.sh` - Merges all feature branches, runs tests/clippy
+- `cleanup-worktrees.sh` - Removes worktrees and deletes feature branches
+
+See the scripts in `scripts/` directory for implementation details.
+
+#### Workflow Example
 
 ```bash
-#!/bin/bash
-# integrate-worktrees.sh
-# Usage: ./integrate-worktrees.sh <base-name> <task1> <task2> ...
+# 1. Create parallel worktrees for independent tasks
+./scripts/setup-parallel-worktrees.sh m5 feature-a feature-b feature-c
 
-BASE_NAME=$1
-shift
-TASKS=("$@")
+# 2. Launch agents in separate terminals
+cd ../m5-feature-a && claude
+cd ../m5-feature-b && claude
+cd ../m5-feature-c && claude
 
-echo "Integrating ${#TASKS[@]} feature branches..."
-
-# Switch to main branch
-git checkout main
-
-for TASK in "${TASKS[@]}"; do
-  BRANCH="feature/$TASK"
-
-  echo ""
-  echo "Integrating $TASK..."
-
-  # Merge feature branch
-  git merge --no-ff "$BRANCH" -m "feat: merge $TASK from parallel development"
-
-  if [ $? -ne 0 ]; then
-    echo "⚠️  Merge conflict in $TASK - resolve manually"
-    exit 1
-  fi
-
-  echo "✓ Merged $BRANCH"
-done
-
-echo ""
-echo "Running final verification..."
-cargo test --workspace
-cargo clippy --workspace --all-targets --all-features -- -D warnings
-
-if [ $? -eq 0 ]; then
-  echo ""
-  echo "✓ All integrations successful!"
-  echo ""
-  echo "Cleanup worktrees with:"
-  echo "  ./cleanup-worktrees.sh $BASE_NAME ${TASKS[*]}"
-else
-  echo "⚠️  Tests or clippy failed - fix before cleanup"
-  exit 1
-fi
-```
-
-**Cleanup Script Template:**
-
-```bash
-#!/bin/bash
-# cleanup-worktrees.sh
-# Usage: ./cleanup-worktrees.sh <base-name> <task1> <task2> ...
-
-BASE_NAME=$1
-shift
-TASKS=("$@")
-
-echo "Cleaning up ${#TASKS[@]} worktrees..."
-
-for TASK in "${TASKS[@]}"; do
-  BRANCH="feature/$TASK"
-  WORKTREE="../${BASE_NAME}-${TASK}"
-
-  echo ""
-  echo "Removing worktree: $WORKTREE"
-  git worktree remove "$WORKTREE"
-
-  echo "Deleting branch: $BRANCH"
-  git branch -d "$BRANCH"
-
-  echo "✓ Cleaned up $TASK"
-done
-
-echo ""
-echo "All worktrees cleaned up!"
-```
-
-#### Workflow Example: M4 Phase 1
-
-```bash
-# 1. Create parallel worktrees for 4 independent tasks
-./setup-parallel-worktrees.sh m4-phase1 \
-  stdlib-fs \
-  stdlib-crypto \
-  stdlib-env \
-  enhanced-errors
-
-# 2. Launch agents in separate terminals/sessions
-# Terminal 1:
-cd ../m4-phase1-stdlib-fs && claude
-# Agent prompt: "Implement stdlib/fs module per M4 Phase 1 plan..."
-
-# Terminal 2:
-cd ../m4-phase1-stdlib-crypto && claude
-# Agent prompt: "Implement stdlib/crypto module per M4 Phase 1 plan..."
-
-# Terminal 3:
-cd ../m4-phase1-stdlib-env && claude
-# Agent prompt: "Implement stdlib/env module per M4 Phase 1 plan..."
-
-# Terminal 4:
-cd ../m4-phase1-enhanced-errors && claude
-# Agent prompt: "Add enhanced error messages per M4 Phase 1 plan..."
-
-# 3. Wait for all agents to complete and commit their work
+# 3. Wait for all agents to complete
 
 # 4. Integrate all feature branches (from main repo)
 cd zero1
-./integrate-worktrees.sh m4-phase1 \
-  stdlib-fs \
-  stdlib-crypto \
-  stdlib-env \
-  enhanced-errors
+./scripts/integrate-worktrees.sh m5 feature-a feature-b feature-c
 
-# 5. Verify integration
-cargo test --workspace
-cargo clippy --workspace --all-targets --all-features -- -D warnings
+# 5. Clean up worktrees (after integration succeeds)
+./scripts/cleanup-worktrees.sh m5 feature-a feature-b feature-c
 
-# 6. Clean up worktrees
-./cleanup-worktrees.sh m4-phase1 \
-  stdlib-fs \
-  stdlib-crypto \
-  stdlib-env \
-  enhanced-errors
-
-# 7. Push to remote
+# 6. Push to remote
 git push origin main
 ```
+
+The integration script automatically runs tests and clippy before declaring success.
 
 #### Agent Prompt Template for Worktree Development
 
@@ -700,6 +569,51 @@ When working on specific areas, consult:
 | Implementation plan | `plan.md` (milestones + task tracking) |
 | Agent guidelines | `AGENTS.md` (coding style + commit conventions) |
 | Sample code | `fixtures/cells/http_server.z1c` |
+
+## CI/CD and Cross-Platform Testing
+
+### Cross-Platform Compatibility
+
+The project runs CI on Linux, macOS, and Windows. Keep these guidelines in mind:
+
+1. **File Paths**: Use `std::env::temp_dir()` or `tempfile` crate, never hardcode `/tmp/`
+2. **Line Endings**: Normalize line endings in tests (use `.replace("\r\n", "\n")`)
+3. **Binary Paths**: Check both `target/debug` and `target/release` directories
+4. **Shell Scripts**: Use bash shebang (`#!/bin/bash`) and test on multiple platforms
+
+### Test Quality Guidelines
+
+**Essential Practices:**
+- Tests must exercise actual functionality, not just type-check
+- Include both happy path and error cases
+- Use meaningful assertions (not just `assert!(true)`)
+- Tests should fail if the feature breaks
+- Use `tempfile` for file I/O tests (cross-platform temp directories)
+
+**Platform-Specific Issues Fixed:**
+- Windows: Used `/tmp/` paths (fixed with `tempfile`)
+- Windows: CRLF vs LF line endings (fixed with normalization)
+- CI: Binary discovery across debug/release profiles
+- CI: GitHub Actions secret handling in workflows
+
+### CI Workflow
+
+The CI pipeline runs:
+1. Tests on 3 platforms (Ubuntu, macOS, Windows) with stable and nightly Rust
+2. Clippy linting with zero warnings
+3. Code formatting checks
+4. Documentation generation and deployment
+5. Example validation (parsing and formatting)
+6. Security audit (advisory warnings)
+
+**Local CI Simulation:**
+```bash
+# Run the same checks as CI
+cargo fmt --all --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace
+cargo doc --workspace --no-deps
+```
 
 ## Common Development Patterns
 
