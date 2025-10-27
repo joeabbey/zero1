@@ -21,6 +21,14 @@ updates:
       - "joeabbey"
     assignees:
       - "joeabbey"
+    # Group minor and patch updates together to reduce PR noise
+    groups:
+      rust-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
   # Monitor GitHub Actions
   - package-ecosystem: "github-actions"
@@ -41,3 +49,8 @@ updates:
       - "joeabbey"
     assignees:
       - "joeabbey"
+    # Group action updates together
+    groups:
+      github-actions:
+        patterns:
+          - "*"
